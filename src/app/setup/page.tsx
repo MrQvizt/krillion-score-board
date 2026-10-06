@@ -48,6 +48,26 @@ export default async function SetupPage() {
       : { label: "Table krillion_profiles", ok: true, detail: "Found." },
   );
 
+  // Objects added by later migrations. Each probe is a cheap, empty read; a
+  // missing table or column shows up as an error naming it.
+  const probes = [
+    { label: "Migration 20261006130000 (real name)", run: () => supabase.from("krillion_profiles").select("full_name", { head: true, count: "exact" }) },
+    { label: "Migration 20261006140000 (join requests)", run: () => supabase.from("krillion_board_join_requests").select("board_id", { head: true, count: "exact" }) },
+  ];
+  for (const probe of probes) {
+    const res = await probe.run();
+    checks.push(
+      res.error
+        ? {
+            label: probe.label,
+            ok: false,
+            detail: `${res.error.code ?? "error"}: ${res.error.message}`,
+            hint: `Not applied yet. Run the matching file in supabase/migrations in the project's SQL Editor, then reload this page.`,
+          }
+        : { label: probe.label, ok: true, detail: "Applied." },
+    );
+  }
+
   if (user) {
     const profile = await supabase.rpc("krillion_ensure_profile", {
       p_display_name: (user.user_metadata?.display_name as string | undefined) ?? null,

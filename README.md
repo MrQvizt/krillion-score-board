@@ -3,7 +3,7 @@
 A fun little site for logging your daily [Krillion](https://krillion.io/) score and racing your friends.
 
 - **Accounts** with email + password. No confirmation email. Everyone picks a nick and gives their real name; the name shows when you hover over a nick, and admins can fill it in for older accounts.
-- **Admin** creates score boards and assigns accounts to them.
+- **Admin** creates score boards and assigns accounts to them. Divers can also ask to join a board from their dashboard; admins approve or decline.
 - **Every board** shows the weekly podium, deepest single dive, total depth, hot streakers, today's dives, and a day-by-day heat grid. Browse back through previous weeks.
 - **Scores** are 0–700 (7 prompts × up to 100 points). 1 point = 10 metres of depth, just like in the game. Days follow UTC, matching Krillion's reset.
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { setAdmin, setFullName } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
+import { JoinRequestList, pairRequests } from "@/components/JoinRequests";
 import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/types";
@@ -11,11 +12,13 @@ export const metadata: Metadata = { title: "Admin" };
 export default async function AdminPage() {
   const { supabase, user } = await requireAdmin();
 
-  const [{ data: boards }, { data: memberRows }, { data: users }] = await Promise.all([
+  const [{ data: boards }, { data: memberRows }, { data: users }, { data: requestRows }] = await Promise.all([
     supabase.from("krillion_boards").select("*").order("created_at"),
     supabase.from("krillion_board_members").select("board_id, user_id"),
     supabase.rpc("krillion_admin_list_users"),
+    supabase.from("krillion_board_join_requests").select("*"),
   ]);
+  const pending = pairRequests(requestRows ?? [], users ?? [], boards ?? []);
 
   const memberCount = new Map<string, number>();
   const boardsPerUser = new Map<string, number>();
@@ -32,6 +35,14 @@ export default async function AdminPage() {
         <h1 className="heading text-4xl sm:text-5xl">Admin</h1>
         <p className="mt-2 text-mist">Create score boards and decide who dives on which one.</p>
       </div>
+
+      <Section
+        title="Join requests"
+        emoji="🙋"
+        subtitle={pending.length ? `${pending.length} diver${pending.length === 1 ? "" : "s"} waiting for a yes.` : "Divers can ask to join a board from their dashboard; the requests land here."}
+      >
+        <JoinRequestList items={pending} />
+      </Section>
 
       <div className="grid gap-6 lg:grid-cols-[2fr_3fr]">
         <Section title="New board" emoji="✨" subtitle="You'll be added to it automatically.">

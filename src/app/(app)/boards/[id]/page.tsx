@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BestDiveList, Podium, StreakList, TotalsList, WeekGridTable } from "@/components/Leaderboards";
 import { Section, StatTile } from "@/components/ui";
 import { WeekNav } from "@/components/WeekNav";
@@ -45,10 +45,14 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
   let members: Member[] = [];
   let scores: { user_id: string; played_on: string; score: number; note: string }[] = [];
   if (memberIds.length) {
-    const [{ data: profiles }, { data: scoreRows }] = await Promise.all([
+    const [{ data: profiles, error: profilesError }, { data: scoreRows }] = await Promise.all([
       supabase.from("krillion_profiles").select("id, display_name, full_name").in("id", memberIds),
       supabase.from("krillion_scores").select("user_id, played_on, score, note").in("user_id", memberIds),
     ]);
+    // A failed read here (typically a column the database does not have yet
+    // because a migration was not run) would render an empty board. Send the
+    // visitor to the diagnostics page instead, which names the problem.
+    if (profilesError) redirect("/setup");
     members = profiles ?? [];
     scores = scoreRows ?? [];
   }

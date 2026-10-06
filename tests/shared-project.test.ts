@@ -105,7 +105,7 @@ describe("migration is re-runnable", () => {
     const policies = await db.query<{ n: number }>(
       "select count(*)::int as n from pg_policies where tablename like 'krillion_%'",
     );
-    expect(policies.rows[0].n).toBe(12); // 3 profiles + 2 boards + 2 members + 5 scores, no duplicates
+    expect(policies.rows[0].n).toBe(16); // 3 profiles + 2 boards + 2 members + 5 scores + 4 join requests, no duplicates
   });
 });
 

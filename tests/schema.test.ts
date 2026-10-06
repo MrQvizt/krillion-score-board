@@ -300,3 +300,51 @@ describe("admin helpers", () => {
     await as(ADMIN, "update krillion_profiles set is_admin = false where id = $1", [BOB]);
   });
 });
+
+describe("join requests", () => {
+  let boardId: string;
+
+  it("lists boards the diver is not on, and only those", async () => {
+    const rows = await db.query<{ id: string }>("select id from krillion_boards limit 1");
+    boardId = rows.rows[0].id;
+    const outsider = await as(OUTSIDER, "select name, member_count::int as n, requested from krillion_boards_to_join()");
+    expect(outsider.rows).toEqual([{ name: "Office Divers", n: 2, requested: false }]);
+    const anna = await as(ANNA, "select name from krillion_boards_to_join()");
+    expect(anna.rows).toHaveLength(0);
+  });
+
+  it("lets a diver ask for themselves only, and not for a board they are on", async () => {
+    await as(OUTSIDER, "insert into krillion_board_join_requests (board_id, user_id) values ($1, $2)", [boardId, OUTSIDER]);
+    await expect(
+      as(OUTSIDER, "insert into krillion_board_join_requests (board_id, user_id) values ($1, $2)", [boardId, BOB]),
+    ).rejects.toThrow(/row-level security/);
+    await expect(
+      as(ANNA, "insert into krillion_board_join_requests (board_id, user_id) values ($1, $2)", [boardId, ANNA]),
+    ).rejects.toThrow(/row-level security/);
+    const again = await as(OUTSIDER, "select requested from krillion_boards_to_join()");
+    expect(again.rows).toEqual([{ requested: true }]);
+  });
+
+  it("shows a request to its owner and to admins, not to other divers", async () => {
+    const own = await as(OUTSIDER, "select count(*)::int as n from krillion_board_join_requests");
+    expect((own.rows[0] as { n: number }).n).toBe(1);
+    const other = await as(BOB, "select count(*)::int as n from krillion_board_join_requests");
+    expect((other.rows[0] as { n: number }).n).toBe(0);
+    const admin = await as(ADMIN, "select count(*)::int as n from krillion_board_join_requests");
+    expect((admin.rows[0] as { n: number }).n).toBe(1);
+  });
+
+  it("lets the diver withdraw, then ask again, and the admin approve", async () => {
+    const withdrawn = await as(OUTSIDER, "delete from krillion_board_join_requests where board_id = $1", [boardId]);
+    expect(withdrawn.affectedRows).toBe(1);
+    await as(OUTSIDER, "insert into krillion_board_join_requests (board_id, user_id) values ($1, $2)", [boardId, OUTSIDER]);
+    // What approveJoinRequest() does: add the member, clear the request.
+    await as(ADMIN, "insert into krillion_board_members (board_id, user_id) values ($1, $2) on conflict do nothing", [boardId, OUTSIDER]);
+    const cleared = await as(ADMIN, "delete from krillion_board_join_requests where board_id = $1 and user_id = $2", [boardId, OUTSIDER]);
+    expect(cleared.affectedRows).toBe(1);
+    const nowMember = await as(OUTSIDER, "select name from krillion_boards");
+    expect(nowMember.rows).toEqual([{ name: "Office Divers" }]);
+    const nothingLeft = await as(OUTSIDER, "select id from krillion_boards_to_join()");
+    expect(nothingLeft.rows).toHaveLength(0);
+  });
+});

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cancelJoinRequest, requestToJoin } from "@/app/actions/boards";
 import { deleteScore } from "@/app/actions/scores";
 import { ScoreForm } from "@/components/ScoreForm";
 import { DepthBar, EmptyState, Nick, Section, StatTile } from "@/components/ui";
@@ -14,7 +15,7 @@ import {
   streakFlames,
   streakTitle,
 } from "@/lib/stats";
-import type { Board } from "@/lib/types";
+import type { Board, JoinableBoard } from "@/lib/types";
 import { formatDayMonth, formatLong, isInWeek, todayUtc, weekStart } from "@/lib/week";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -24,10 +25,12 @@ export default async function DashboardPage() {
   const today = todayUtc();
   const thisWeek = weekStart(today);
 
-  const [{ data: scores }, { data: memberships }] = await Promise.all([
+  const [{ data: scores }, { data: memberships }, { data: joinableRows }] = await Promise.all([
     supabase.from("krillion_scores").select("*").eq("user_id", user.id).order("played_on", { ascending: false }),
     supabase.from("krillion_board_members").select("board_id").eq("user_id", user.id),
+    supabase.rpc("krillion_boards_to_join"),
   ]);
+  const joinable: JoinableBoard[] = joinableRows ?? [];
 
   const boardIds = (memberships ?? []).map((m) => m.board_id);
   let boards: Board[] = [];
@@ -127,10 +130,10 @@ export default async function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <Section title="Your boards" emoji="🏆" subtitle="Boards you've been assigned to.">
+          <Section title="Your boards" emoji="🏆" subtitle="Boards you're on.">
             {boards.length === 0 ? (
               <EmptyState emoji="🐚">
-                You&apos;re not on a board yet. Ask the admin to add you to one.
+                You&apos;re not on a board yet.{joinable.length ? " Pick one below and ask to join." : " Ask the admin to create one."}
               </EmptyState>
             ) : (
               <ul className="grid gap-3">
@@ -154,6 +157,43 @@ export default async function DashboardPage() {
               </ul>
             )}
           </Section>
+
+          {joinable.length > 0 ? (
+            <Section title="Other boards" emoji="🙋" subtitle="Ask to join. An admin approves, then the board shows up above.">
+              <ul className="grid gap-3">
+                {joinable.map((b) => (
+                  <li key={b.id} className="card-solid flex items-center gap-4 p-4">
+                    <span className="text-4xl" aria-hidden>
+                      {b.emoji}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="heading block truncate text-lg">{b.name}</span>
+                      <span className="block truncate text-sm text-mist">
+                        {b.description ? `${b.description} · ` : ""}
+                        {b.member_count} diver{b.member_count === 1 ? "" : "s"}
+                      </span>
+                    </span>
+                    {b.requested ? (
+                      <form action={cancelJoinRequest} className="flex items-center gap-2">
+                        <input type="hidden" name="board_id" value={b.id} />
+                        <span className="chip border-sun/40 text-sun">⏳ requested</span>
+                        <button type="submit" className="btn-ghost btn-sm" title="Withdraw the request">
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <form action={requestToJoin}>
+                        <input type="hidden" name="board_id" value={b.id} />
+                        <button type="submit" className="btn-aqua btn-sm">
+                          Request to join
+                        </button>
+                      </form>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          ) : null}
 
           <Section title="How scoring works" emoji="🤿">
             <ul className="space-y-2 text-sm text-mist">

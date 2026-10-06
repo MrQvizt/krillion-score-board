@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { addMember, deleteBoard, removeMember } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
 import { ConfirmForm } from "@/components/ConfirmForm";
+import { JoinRequestList, pairRequests } from "@/components/JoinRequests";
 import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/types";
@@ -14,12 +15,14 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
   const { id } = await props.params;
   const { supabase } = await requireAdmin();
 
-  const [{ data: board }, { data: memberRows }, { data: users }] = await Promise.all([
+  const [{ data: board }, { data: memberRows }, { data: users }, { data: requestRows }] = await Promise.all([
     supabase.from("krillion_boards").select("*").eq("id", id).maybeSingle(),
     supabase.from("krillion_board_members").select("user_id").eq("board_id", id),
     supabase.rpc("krillion_admin_list_users"),
+    supabase.from("krillion_board_join_requests").select("*").eq("board_id", id),
   ]);
   if (!board) notFound();
+  const pending = pairRequests(requestRows ?? [], users ?? [], [board]);
 
   const memberIds = new Set((memberRows ?? []).map((m) => m.user_id));
   const allUsers: AdminUser[] = users ?? [];
@@ -65,6 +68,12 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
         </Section>
 
         <div className="space-y-6">
+          {pending.length > 0 ? (
+            <Section title="Join requests" emoji="🙋" subtitle={`${pending.length} diver${pending.length === 1 ? "" : "s"} asked to join this board.`}>
+              <JoinRequestList items={pending} showBoard={false} />
+            </Section>
+          ) : null}
+
           <Section title="Members" emoji="🧜" subtitle={`${members.length} diver${members.length === 1 ? "" : "s"} on this board`}>
             {members.length === 0 ? (
               <EmptyState emoji="🐚">Nobody yet. Add divers below.</EmptyState>

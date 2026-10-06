@@ -35,6 +35,22 @@ export type Score = {
   updated_at: string;
 };
 
+export type JoinRequest = {
+  board_id: string;
+  user_id: string;
+  created_at: string;
+};
+
+/** A board the signed-in diver is not on, as listed by krillion_boards_to_join(). */
+export type JoinableBoard = {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  member_count: number;
+  requested: boolean;
+};
+
 export type AdminUser = {
   id: string;
   display_name: string;
@@ -76,6 +92,11 @@ export type Database = {
         { board_id: string; user_id: string; added_at?: string },
         Partial<BoardMember>
       >;
+      krillion_board_join_requests: Table<
+        JoinRequest,
+        { board_id: string; user_id: string; created_at?: string },
+        Partial<JoinRequest>
+      >;
       krillion_scores: Table<
         Score,
         {
@@ -100,6 +121,7 @@ export type Database = {
         Returns: Profile;
       };
       krillion_admin_list_users: { Args: Record<string, never>; Returns: AdminUser[] };
+      krillion_boards_to_join: { Args: Record<string, never>; Returns: JoinableBoard[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

@@ -107,3 +107,25 @@ export async function setFullName(formData: FormData): Promise<void> {
     .eq("id", userId);
   revalidatePath("/", "layout");
 }
+
+/** Admin only: approve a join request. Adds the diver to the board and clears the request. */
+export async function approveJoinRequest(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const boardId = text(formData, "board_id", 64);
+  const userId = text(formData, "user_id", 64);
+  if (!boardId || !userId) return;
+  const { error } = await supabase.from("krillion_board_members").upsert({ board_id: boardId, user_id: userId });
+  if (error) return;
+  await supabase.from("krillion_board_join_requests").delete().eq("board_id", boardId).eq("user_id", userId);
+  revalidatePath("/", "layout");
+}
+
+/** Admin only: decline (delete) a join request. The diver can ask again later. */
+export async function declineJoinRequest(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const boardId = text(formData, "board_id", 64);
+  const userId = text(formData, "user_id", 64);
+  if (!boardId || !userId) return;
+  await supabase.from("krillion_board_join_requests").delete().eq("board_id", boardId).eq("user_id", userId);
+  revalidatePath("/", "layout");
+}
