@@ -151,7 +151,7 @@ export default async function DashboardPage() {
             <ul className="space-y-2 text-sm text-mist">
               <li>Krillion gives you 7 prompts a day. Rare answers pay more, up to 100 each.</li>
               <li>So a perfect day is {MAX_DAILY_SCORE} points. Log your total here.</li>
-              <li>Every point is 4 metres of depth. {MAX_DAILY_SCORE} points is {formatMetres(depthMetres(MAX_DAILY_SCORE))} down.</li>
+              <li>Every point is 10 metres of depth. {MAX_DAILY_SCORE} points is {formatMetres(depthMetres(MAX_DAILY_SCORE))} down.</li>
               <li>Streaks count consecutive UTC days with a logged dive.</li>
             </ul>
           </Section>

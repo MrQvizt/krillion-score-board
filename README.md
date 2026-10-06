@@ -5,7 +5,7 @@ A fun little site for logging your daily [Krillion](https://krillion.io/) score 
 - **Accounts** with email + password. No confirmation email.
 - **Admin** creates score boards and assigns accounts to them.
 - **Every board** shows the weekly podium, deepest single dive, total depth, hot streakers, today's dives, and a day-by-day heat grid. Browse back through previous weeks.
-- **Scores** are 0–700 (7 prompts × up to 100 points). 1 point = 4 metres of depth, just like in the game. Days follow UTC, matching Krillion's reset.
+- **Scores** are 0–700 (7 prompts × up to 100 points). 1 point = 10 metres of depth, just like in the game. Days follow UTC, matching Krillion's reset.
 
 Built with Next.js 16 (App Router), Tailwind v4 and Supabase (Postgres + Auth). Deploys to Vercel in a couple of clicks.
 
@@ -97,7 +97,7 @@ All data access goes through Supabase with the signed-in user's session, so Post
 
 ### Scoring rules in one place
 
-`src/lib/constants.ts` holds `MAX_DAILY_SCORE` (700) and `METRES_PER_POINT` (4). The database check constraint in the migration also caps scores at 700, so change both if Krillion ever changes its rules.
+`src/lib/constants.ts` holds `MAX_DAILY_SCORE` (700) and `METRES_PER_POINT` (10). The database check constraint in the migration also caps scores at 700, so change both if Krillion ever changes its rules.
 
 ---
 
