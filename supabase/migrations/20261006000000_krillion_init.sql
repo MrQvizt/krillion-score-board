@@ -122,11 +122,11 @@ $$;
 -- block so a project without those tables (or with a different `profiles`
 -- shape) simply skips them.
 --
--- Written with assignments rather than SELECT ... INTO on purpose: the
--- Supabase SQL Editor scans pasted SQL for "select ... into <name>" to add
--- "enable row level security" statements, does not notice when that sits
--- inside a function body, and splices its statement into the middle of the
--- function, which breaks the $$ quoting.
+-- Written with plain assignments (var := (subquery)) on purpose. The Supabase
+-- SQL Editor scans pasted SQL for the query-result-to-variable form to add
+-- "enable row level security" statements, does not notice when that form sits
+-- inside a function body, and splices its statement mid-function, which
+-- breaks the $$ quoting.
 create or replace function public.krillion_ensure_profile(p_display_name text default null)
 returns public.krillion_profiles
 language plpgsql
