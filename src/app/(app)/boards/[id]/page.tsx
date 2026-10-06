@@ -62,6 +62,10 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
   const boardTotal = weekScores.reduce((sum, s) => sum + s.score, 0);
   const divers = activeDivers(scores, members, start);
   const topStreak = streaks[0];
+  // The podium shows the top three divers who have dived; everyone else is
+  // listed under it, from 4th place down, so the section is the whole board.
+  const onPodium = new Set(totals.filter((e) => e.dives > 0).slice(0, 3).map((e) => e.member.id));
+  const belowPodium = totals.filter((e) => !onPodium.has(e.member.id));
 
   return (
     <div className="space-y-6">
@@ -100,6 +104,12 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
 
       <Section title="Weekly podium" emoji="🏆" subtitle="Biggest total score this week.">
         <Podium entries={totals} />
+        {belowPodium.length > 0 && onPodium.size > 0 ? (
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="eyebrow mb-3">The rest of the board</p>
+            <TotalsList entries={belowPodium} offset={onPodium.size} scaleMax={totals[0]?.total} />
+          </div>
+        ) : null}
       </Section>
 
       <div className="grid gap-6 lg:grid-cols-2">

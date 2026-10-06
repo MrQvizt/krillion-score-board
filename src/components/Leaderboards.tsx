@@ -57,13 +57,26 @@ export function Podium({ entries }: { entries: WeeklyTotal[] }) {
   );
 }
 
-export function TotalsList({ entries }: { entries: WeeklyTotal[] }) {
-  const max = Math.max(1, ...entries.map((e) => e.total));
+/**
+ * Ranked weekly totals. `offset` is the rank of the first entry (3 when the
+ * list continues under a podium); `scaleMax` keeps the bars comparable with a
+ * list rendered elsewhere (the podium leader's total).
+ */
+export function TotalsList({
+  entries,
+  offset = 0,
+  scaleMax,
+}: {
+  entries: WeeklyTotal[];
+  offset?: number;
+  scaleMax?: number;
+}) {
+  const max = Math.max(1, scaleMax ?? 0, ...entries.map((e) => e.total));
   return (
     <ol className="space-y-3">
       {entries.map((e, i) => (
         <li key={e.member.id} className="flex items-center gap-3">
-          <span className="w-8 shrink-0 text-center font-display text-lg font-bold text-mist">{medal(i)}</span>
+          <span className="w-8 shrink-0 text-center font-display text-lg font-bold text-mist">{medal(i + offset)}</span>
           <Avatar name={e.member.display_name} />
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
@@ -72,7 +85,7 @@ export function TotalsList({ entries }: { entries: WeeklyTotal[] }) {
               </span>
               <span className="font-display text-lg font-bold">{e.total}</span>
             </div>
-            <DepthBar value={e.total} max={max} color={i === 0 ? "from-sun to-krill-light" : undefined} />
+            <DepthBar value={e.total} max={max} color={i + offset === 0 ? "from-sun to-krill-light" : undefined} />
             <div className="mt-1 text-xs text-mist">
               {e.dives === 0 ? "Hasn't dived this week" : `${e.dives} dive${e.dives === 1 ? "" : "s"} · avg ${e.average} · best ${e.best}`}
             </div>
