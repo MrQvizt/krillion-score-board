@@ -1,4 +1,4 @@
-/** Hand-written database types matching supabase/migrations. */
+/** Hand-written database types matching supabase/migrations. All objects are prefixed krillion_ because the Supabase project is shared with other apps. */
 
 export type Profile = {
   id: string;
@@ -50,12 +50,12 @@ type Table<Row, Insert, Update> = {
 export type Database = {
   public: {
     Tables: {
-      profiles: Table<
+      krillion_profiles: Table<
         Profile,
         { id: string; display_name: string; is_admin?: boolean; created_at?: string },
         Partial<Profile>
       >;
-      boards: Table<
+      krillion_boards: Table<
         Board,
         {
           id?: string;
@@ -67,12 +67,12 @@ export type Database = {
         },
         Partial<Board>
       >;
-      board_members: Table<
+      krillion_board_members: Table<
         BoardMember,
         { board_id: string; user_id: string; added_at?: string },
         Partial<BoardMember>
       >;
-      scores: Table<
+      krillion_scores: Table<
         Score,
         {
           id?: string;
@@ -88,10 +88,11 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
-      is_admin: { Args: Record<string, never>; Returns: boolean };
-      is_board_member: { Args: { target_board: string }; Returns: boolean };
-      shares_board_with: { Args: { target_user: string }; Returns: boolean };
-      admin_list_users: { Args: Record<string, never>; Returns: AdminUser[] };
+      krillion_is_admin: { Args: Record<string, never>; Returns: boolean };
+      krillion_is_board_member: { Args: { target_board: string }; Returns: boolean };
+      krillion_shares_board_with: { Args: { target_user: string }; Returns: boolean };
+      krillion_ensure_profile: { Args: { p_display_name?: string | null }; Returns: Profile };
+      krillion_admin_list_users: { Args: Record<string, never>; Returns: AdminUser[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

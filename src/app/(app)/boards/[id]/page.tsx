@@ -22,7 +22,7 @@ import { isInWeek, isValidDateString, todayUtc, weekDays, weekStart } from "@/li
 export async function generateMetadata(props: PageProps<"/boards/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const supabase = await createClient();
-  const { data } = await supabase.from("boards").select("name").eq("id", id).maybeSingle();
+  const { data } = await supabase.from("krillion_boards").select("name").eq("id", id).maybeSingle();
   return { title: data?.name ?? "Board" };
 }
 
@@ -36,18 +36,18 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
   const start = typeof w === "string" && isValidDateString(w) ? weekStart(w) : thisWeek;
   const viewingCurrent = start === thisWeek;
 
-  const { data: board } = await supabase.from("boards").select("*").eq("id", id).maybeSingle();
+  const { data: board } = await supabase.from("krillion_boards").select("*").eq("id", id).maybeSingle();
   if (!board) notFound();
 
-  const { data: memberRows } = await supabase.from("board_members").select("user_id").eq("board_id", id);
+  const { data: memberRows } = await supabase.from("krillion_board_members").select("user_id").eq("board_id", id);
   const memberIds = (memberRows ?? []).map((m) => m.user_id);
 
   let members: Member[] = [];
   let scores: { user_id: string; played_on: string; score: number; note: string }[] = [];
   if (memberIds.length) {
     const [{ data: profiles }, { data: scoreRows }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name").in("id", memberIds),
-      supabase.from("scores").select("user_id, played_on, score, note").in("user_id", memberIds),
+      supabase.from("krillion_profiles").select("id, display_name").in("id", memberIds),
+      supabase.from("krillion_scores").select("user_id, played_on, score, note").in("user_id", memberIds),
     ]);
     members = profiles ?? [];
     scores = scoreRows ?? [];

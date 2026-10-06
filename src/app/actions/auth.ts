@@ -45,8 +45,17 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
         values,
       };
     }
-    if (data.user && adminEmails().includes(email)) {
-      await admin.from("profiles").update({ is_admin: true }).eq("id", data.user.id);
+    if (data.user) {
+      // No trigger on the shared auth.users table, so create the profile here.
+      const { count } = await admin
+        .from("krillion_profiles")
+        .select("id", { count: "exact", head: true });
+      const isFirst = (count ?? 0) === 0;
+      await admin.from("krillion_profiles").upsert({
+        id: data.user.id,
+        display_name: displayName,
+        is_admin: isFirst || adminEmails().includes(email),
+      });
     }
   } else {
     // No service role key: fall back to a normal sign-up. Requires "Confirm email"

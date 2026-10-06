@@ -15,9 +15,9 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
   const { supabase } = await requireAdmin();
 
   const [{ data: board }, { data: memberRows }, { data: users }] = await Promise.all([
-    supabase.from("boards").select("*").eq("id", id).maybeSingle(),
-    supabase.from("board_members").select("user_id").eq("board_id", id),
-    supabase.rpc("admin_list_users"),
+    supabase.from("krillion_boards").select("*").eq("id", id).maybeSingle(),
+    supabase.from("krillion_board_members").select("user_id").eq("board_id", id),
+    supabase.rpc("krillion_admin_list_users"),
   ]);
   if (!board) notFound();
 

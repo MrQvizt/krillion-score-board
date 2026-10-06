@@ -16,20 +16,19 @@ export async function getSession(): Promise<Session | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  let { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  let { data: profile } = await supabase
+    .from("krillion_profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
 
   if (!profile) {
-    // Accounts created before this app existed have no profile yet. Make one.
-    const fallbackName =
-      (user.user_metadata?.display_name as string | undefined)?.trim() ||
-      user.email?.split("@")[0] ||
-      "diver";
-    const { data: created } = await supabase
-      .from("profiles")
-      .insert({ id: user.id, display_name: fallbackName.slice(0, 40) })
-      .select("*")
-      .single();
-    profile = created;
+    // First visit (or an account from another app sharing this Supabase project):
+    // create the Krillion profile. The first profile ever becomes admin.
+    const { data: created } = await supabase.rpc("krillion_ensure_profile", {
+      p_display_name: (user.user_metadata?.display_name as string | undefined) ?? null,
+    });
+    profile = created ?? null;
   }
 
   if (!profile) return null;

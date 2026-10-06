@@ -12,9 +12,9 @@ export default async function AdminPage() {
   const { supabase, user } = await requireAdmin();
 
   const [{ data: boards }, { data: memberRows }, { data: users }] = await Promise.all([
-    supabase.from("boards").select("*").order("created_at"),
-    supabase.from("board_members").select("board_id, user_id"),
-    supabase.rpc("admin_list_users"),
+    supabase.from("krillion_boards").select("*").order("created_at"),
+    supabase.from("krillion_board_members").select("board_id, user_id"),
+    supabase.rpc("krillion_admin_list_users"),
   ]);
 
   const memberCount = new Map<string, number>();

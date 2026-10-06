@@ -27,7 +27,7 @@ export async function saveScore(_prev: FormState, formData: FormData): Promise<F
   }
 
   const { error } = await supabase
-    .from("scores")
+    .from("krillion_scores")
     .upsert({ user_id: user.id, played_on: playedOn, score, note }, { onConflict: "user_id,played_on" });
 
   if (error) return { error: error.message, values };
@@ -43,6 +43,6 @@ export async function deleteScore(formData: FormData): Promise<void> {
   const { supabase, user } = await requireSession();
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  await supabase.from("scores").delete().eq("id", id).eq("user_id", user.id);
+  await supabase.from("krillion_scores").delete().eq("id", id).eq("user_id", user.id);
   revalidatePath("/", "layout");
 }

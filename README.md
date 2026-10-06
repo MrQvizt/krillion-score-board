@@ -11,10 +11,18 @@ Built with Next.js 16 (App Router), Tailwind v4 and Supabase (Postgres + Auth). 
 
 ## 1. Set up Supabase
 
-1. Create a project at [supabase.com](https://supabase.com) (or use an existing one).
-2. Open the **SQL Editor** and run the contents of [`supabase/migrations/20261006000000_init.sql`](supabase/migrations/20261006000000_init.sql). This creates the `profiles`, `boards`, `board_members` and `scores` tables, the helper functions, triggers and all row-level-security policies.
+The schema is built to live in a Supabase project that is **shared with other apps**:
+
+- every table and function is prefixed `krillion_` (`krillion_profiles`, `krillion_boards`, `krillion_board_members`, `krillion_scores`), so nothing collides;
+- nothing is attached to `auth.users`: no trigger, no changes. Users of the other apps are untouched until they open this site, at which point `krillion_ensure_profile()` creates their Krillion profile.
+
+Steps:
+
+1. Open the project's **SQL Editor** and run [`supabase/migrations/20261006000000_krillion_init.sql`](supabase/migrations/20261006000000_krillion_init.sql).
    - Or with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`.
-3. Grab your keys from **Settings → API**.
+2. Grab your keys from **Settings → API**.
+
+Because auth is shared, anyone with an account in one of the other apps can log in here with the same email and password. They won't see anything until an admin puts them on a board.
 
 ### Accounts without email confirmation
 
@@ -25,10 +33,10 @@ Pick one of these:
 
 ### Who is admin?
 
-- The **first account to sign up** is made admin automatically.
-- Any email listed in `ADMIN_EMAILS` (comma-separated) is made admin when it signs up (needs the service role key).
+- The **first Krillion profile ever created** is admin. That is the first person to sign up or log in on this site, so do that yourself right after deploying.
+- Any email listed in `ADMIN_EMAILS` (comma-separated) is made admin when it signs up (needs the service role key). Set this too, to be safe.
 - Admins can promote or demote others on the **Admin** page.
-- Manual fallback, in the SQL editor: `update public.profiles set is_admin = true where id = (select id from auth.users where email = 'you@example.com');`
+- Manual fallback, in the SQL editor: `update public.krillion_profiles set is_admin = true where id = (select id from auth.users where email = 'you@example.com');`
 
 ## 2. Run locally
 
@@ -67,7 +75,7 @@ npm run build
 | `src/lib/stats.ts` | Pure leaderboard maths (tested in `tests/stats.test.ts`) |
 | `src/lib/week.ts` | UTC date and ISO-week helpers |
 | `src/proxy.ts` | Refreshes the Supabase session cookie and guards private routes |
-| `supabase/migrations` | Database schema + RLS (tested in `tests/schema.test.ts`) |
+| `supabase/migrations` | Database schema + RLS, all prefixed `krillion_` (tested in `tests/schema.test.ts`) |
 
 ### Security model
 

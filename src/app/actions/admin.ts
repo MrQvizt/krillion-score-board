@@ -27,14 +27,14 @@ export async function createBoard(_prev: FormState, formData: FormData): Promise
   if (!name) return { error: "Give the board a name.", values };
 
   const { data, error } = await supabase
-    .from("boards")
+    .from("krillion_boards")
     .insert({ name, description, emoji, created_by: user.id })
     .select("id")
     .single();
   if (error || !data) return { error: error?.message ?? "Could not create board.", values };
 
   // The admin usually wants to be on their own board.
-  await supabase.from("board_members").insert({ board_id: data.id, user_id: user.id });
+  await supabase.from("krillion_board_members").insert({ board_id: data.id, user_id: user.id });
 
   revalidatePath("/", "layout");
   redirect(`/admin/boards/${data.id}`);
@@ -51,7 +51,7 @@ export async function updateBoard(_prev: FormState, formData: FormData): Promise
   if (!id) return { error: "Missing board.", values };
   if (!name) return { error: "Give the board a name.", values };
 
-  const { error } = await supabase.from("boards").update({ name, description, emoji }).eq("id", id);
+  const { error } = await supabase.from("krillion_boards").update({ name, description, emoji }).eq("id", id);
   if (error) return { error: error.message, values };
 
   revalidatePath("/", "layout");
@@ -62,7 +62,7 @@ export async function deleteBoard(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
   const id = text(formData, "id", 64);
   if (!id) return;
-  await supabase.from("boards").delete().eq("id", id);
+  await supabase.from("krillion_boards").delete().eq("id", id);
   revalidatePath("/", "layout");
   redirect("/admin");
 }
@@ -72,7 +72,7 @@ export async function addMember(formData: FormData): Promise<void> {
   const boardId = text(formData, "board_id", 64);
   const userId = text(formData, "user_id", 64);
   if (!boardId || !userId) return;
-  await supabase.from("board_members").upsert({ board_id: boardId, user_id: userId });
+  await supabase.from("krillion_board_members").upsert({ board_id: boardId, user_id: userId });
   revalidatePath("/", "layout");
 }
 
@@ -81,7 +81,7 @@ export async function removeMember(formData: FormData): Promise<void> {
   const boardId = text(formData, "board_id", 64);
   const userId = text(formData, "user_id", 64);
   if (!boardId || !userId) return;
-  await supabase.from("board_members").delete().eq("board_id", boardId).eq("user_id", userId);
+  await supabase.from("krillion_board_members").delete().eq("board_id", boardId).eq("user_id", userId);
   revalidatePath("/", "layout");
 }
 
@@ -91,6 +91,6 @@ export async function setAdmin(formData: FormData): Promise<void> {
   const value = text(formData, "value", 5) === "true";
   if (!userId) return;
   if (userId === user.id && !value) return; // never demote yourself and lock everyone out
-  await supabase.from("profiles").update({ is_admin: value }).eq("id", userId);
+  await supabase.from("krillion_profiles").update({ is_admin: value }).eq("id", userId);
   revalidatePath("/", "layout");
 }

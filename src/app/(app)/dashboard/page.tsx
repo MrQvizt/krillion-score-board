@@ -25,14 +25,14 @@ export default async function DashboardPage() {
   const thisWeek = weekStart(today);
 
   const [{ data: scores }, { data: memberships }] = await Promise.all([
-    supabase.from("scores").select("*").eq("user_id", user.id).order("played_on", { ascending: false }),
-    supabase.from("board_members").select("board_id").eq("user_id", user.id),
+    supabase.from("krillion_scores").select("*").eq("user_id", user.id).order("played_on", { ascending: false }),
+    supabase.from("krillion_board_members").select("board_id").eq("user_id", user.id),
   ]);
 
   const boardIds = (memberships ?? []).map((m) => m.board_id);
   let boards: Board[] = [];
   if (boardIds.length) {
-    const { data } = await supabase.from("boards").select("*").in("id", boardIds).order("name");
+    const { data } = await supabase.from("krillion_boards").select("*").in("id", boardIds).order("name");
     boards = data ?? [];
   }
 
