@@ -118,9 +118,15 @@ $$;
 -- name / gamer tag, the local part of their email.
 --
 -- Admin: the very first profile ever created, or anyone in Arena Tracker's
--- public.app_admins. The Arena Tracker lookups run as dynamic SQL inside their
--- own exception blocks so a project without those tables (or with a different
--- `profiles` shape) simply skips them.
+-- public.app_admins. The Arena Tracker lookups each sit in their own exception
+-- block so a project without those tables (or with a different `profiles`
+-- shape) simply skips them.
+--
+-- Written with assignments rather than SELECT ... INTO on purpose: the
+-- Supabase SQL Editor scans pasted SQL for "select ... into <name>" to add
+-- "enable row level security" statements, does not notice when that sits
+-- inside a function body, and splices its statement into the middle of the
+-- function, which breaks the $$ quoting.
 create or replace function public.krillion_ensure_profile(p_display_name text default null)
 returns public.krillion_profiles
 language plpgsql
@@ -138,8 +144,8 @@ begin
     raise exception 'not authenticated' using errcode = '28000';
   end if;
 
-  select * into result from public.krillion_profiles where id = uid;
-  if found then
+  result := (select p from public.krillion_profiles p where p.id = uid);
+  if result.id is not null then
     return result;
   end if;
 
@@ -147,10 +153,11 @@ begin
   -- plpgsql only resolves a statement's tables when it first runs, so a
   -- missing table or column surfaces here as an exception and is skipped.
   begin
-    select coalesce(nullif(trim(p.riot_game_name), ''), nullif(trim(p.gamer_tag), ''))
-      into linked_name
+    linked_name := (
+      select coalesce(nullif(trim(p.riot_game_name), ''), nullif(trim(p.gamer_tag), ''))
       from public.profiles p
-     where p.id = uid;
+      where p.id = uid
+    );
   exception
     when undefined_table or undefined_column then
       linked_name := null;
@@ -158,22 +165,22 @@ begin
 
   -- Arena Tracker: site admins.
   begin
-    select exists (select 1 from public.app_admins a where a.user_id = uid)
-      into linked_admin;
+    linked_admin := exists (select 1 from public.app_admins a where a.user_id = uid);
   exception
     when undefined_table or undefined_column then
       linked_admin := false;
   end;
 
-  select coalesce(
-    nullif(trim(p_display_name), ''),
-    nullif(trim(u.raw_user_meta_data ->> 'display_name'), ''),
-    linked_name,
-    split_part(coalesce(u.email, 'diver'), '@', 1)
-  )
-  into chosen_name
-  from auth.users u
-  where u.id = uid;
+  chosen_name := (
+    select coalesce(
+      nullif(trim(p_display_name), ''),
+      nullif(trim(u.raw_user_meta_data ->> 'display_name'), ''),
+      linked_name,
+      split_part(coalesce(u.email, 'diver'), '@', 1)
+    )
+    from auth.users u
+    where u.id = uid
+  );
 
   insert into public.krillion_profiles (id, display_name, is_admin)
   values (
@@ -183,7 +190,7 @@ begin
   )
   on conflict (id) do nothing;
 
-  select * into result from public.krillion_profiles where id = uid;
+  result := (select p from public.krillion_profiles p where p.id = uid);
   return result;
 end;
 $$;
