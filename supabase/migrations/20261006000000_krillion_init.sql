@@ -144,11 +144,13 @@ begin
   end if;
 
   -- Arena Tracker: Riot game name, falling back to the legacy gamer tag.
+  -- plpgsql only resolves a statement's tables when it first runs, so a
+  -- missing table or column surfaces here as an exception and is skipped.
   begin
-    execute 'select coalesce(nullif(trim(p.riot_game_name), ''''), nullif(trim(p.gamer_tag), ''''))'
-         || ' from public.profiles p where p.id = $1'
+    select coalesce(nullif(trim(p.riot_game_name), ''), nullif(trim(p.gamer_tag), ''))
       into linked_name
-      using uid;
+      from public.profiles p
+     where p.id = uid;
   exception
     when undefined_table or undefined_column then
       linked_name := null;
@@ -156,9 +158,8 @@ begin
 
   -- Arena Tracker: site admins.
   begin
-    execute 'select exists (select 1 from public.app_admins a where a.user_id = $1)'
-      into linked_admin
-      using uid;
+    select exists (select 1 from public.app_admins a where a.user_id = uid)
+      into linked_admin;
   exception
     when undefined_table or undefined_column then
       linked_admin := false;
