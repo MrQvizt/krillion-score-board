@@ -7,10 +7,15 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
 
-const MIGRATION = path.resolve(
-  __dirname,
-  "../supabase/migrations/20261006000000_krillion_init.sql",
-);
+import { readdirSync } from "node:fs";
+
+const MIGRATIONS_DIR = path.resolve(__dirname, "../supabase/migrations");
+/** Every migration, in filename order, as one script (how a fresh project is set up). */
+const MIGRATION = readdirSync(MIGRATIONS_DIR)
+  .filter((f) => f.endsWith(".sql"))
+  .sort()
+  .map((f) => readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"))
+  .join("\n");
 
 const ADMIN = "11111111-1111-4111-8111-111111111111";
 const ANNA = "22222222-2222-4222-8222-222222222222";
@@ -52,7 +57,7 @@ beforeAll(async () => {
     alter default privileges in schema public grant all on tables to anon, authenticated;
     alter default privileges in schema public grant all on functions to anon, authenticated;
   `);
-  await db.exec(readFileSync(MIGRATION, "utf8"));
+  await db.exec(MIGRATION);
 
   // Sign up four users. There is no trigger on auth.users (the project is
   // shared with other apps), so each user's first visit creates the profile.
@@ -106,6 +111,39 @@ describe("krillion_ensure_profile", () => {
     expect(before.rows[0].n).toBe(0);
     const made = await as(GHOST, "select (krillion_ensure_profile()).* ");
     expect(made.rows[0]).toMatchObject({ display_name: "ghost", is_admin: false });
+  });
+});
+
+describe("real name", () => {
+  it("stores the name given at sign-up and shows it in the admin list", async () => {
+    const NAMED = "77777777-7777-4777-8777-777777777777";
+    await db.query(
+      `insert into auth.users (id, email, raw_user_meta_data) values ($1, 'named@example.com', '{"display_name":"Nicky","full_name":"Nicole Named"}')`,
+      [NAMED],
+    );
+    const made = await as(NAMED, "select (krillion_ensure_profile()).* ");
+    expect(made.rows[0]).toMatchObject({ display_name: "Nicky", full_name: "Nicole Named" });
+    const listed = await as(ADMIN, "select full_name from krillion_admin_list_users() where id = $1", [NAMED]);
+    expect(listed.rows[0]).toEqual({ full_name: "Nicole Named" });
+  });
+
+  it("takes an explicit name argument and leaves it null when nothing is known", async () => {
+    const A = "88888888-8888-4888-8888-888888888888";
+    const B = "99999999-9999-4999-8999-999999999999";
+    await db.query("insert into auth.users (id, email) values ($1, 'a@example.com'), ($2, 'b@example.com')", [A, B]);
+    const a = await as(A, "select (krillion_ensure_profile('NickA', 'Real A')).* ");
+    expect(a.rows[0]).toMatchObject({ display_name: "NickA", full_name: "Real A" });
+    const b = await as(B, "select (krillion_ensure_profile()).* ");
+    expect(b.rows[0]).toMatchObject({ display_name: "b", full_name: null });
+  });
+
+  it("lets an admin set a name on an existing profile, and a user set their own", async () => {
+    const byAdmin = await as(ADMIN, "update krillion_profiles set full_name = 'Anna Admin-set' where id = $1", [ANNA]);
+    expect(byAdmin.affectedRows).toBe(1);
+    const own = await as(BOB, "update krillion_profiles set full_name = 'Bob Himself' where id = $1", [BOB]);
+    expect(own.affectedRows).toBe(1);
+    const sneaky = await as(BOB, "update krillion_profiles set full_name = 'Hacked' where id = $1", [ANNA]);
+    expect(sneaky.affectedRows ?? 0).toBe(0);
   });
 });
 
@@ -228,7 +266,7 @@ describe("scores", () => {
 describe("admin helpers", () => {
   it("admin_list_users returns emails only for admins", async () => {
     const admin = await as(ADMIN, "select email from krillion_admin_list_users() order by email");
-    expect(admin.rows).toHaveLength(5); // four sign-ups plus the other-app user above
+    expect(admin.rows).toHaveLength(8); // four sign-ups, the other-app user, and the three from the real-name tests
     const anna = await as(ANNA, "select email from krillion_admin_list_users()");
     expect(anna.rows).toHaveLength(0);
   });

@@ -12,7 +12,7 @@ import {
   type WeeklyTotal,
 } from "@/lib/stats";
 import { formatShort, weekdayShort } from "@/lib/week";
-import { Avatar, DepthBar, EmptyState } from "./ui";
+import { Avatar, DepthBar, EmptyState, Nick } from "./ui";
 
 const PODIUM_STYLES = [
   "from-sun/30 to-sun/5 border-sun/40 shadow-[0_0_40px_-10px_rgba(255,209,102,0.5)]",
@@ -43,7 +43,9 @@ export function Podium({ entries }: { entries: WeeklyTotal[] }) {
             <div className="mt-2 flex justify-center">
               <Avatar name={e.member.display_name} size="lg" />
             </div>
-            <div className="heading mt-2 truncate text-xl">{e.member.display_name}</div>
+            <div className="heading mt-2 truncate text-xl">
+              <Nick nick={e.member.display_name} name={e.member.full_name} />
+            </div>
             <div className="heading mt-1 text-4xl">{e.total}</div>
             <div className="text-xs text-mist">
               {e.dives} dive{e.dives === 1 ? "" : "s"} · avg {e.average} · {formatMetres(depthMetres(e.total))}
@@ -65,7 +67,9 @@ export function TotalsList({ entries }: { entries: WeeklyTotal[] }) {
           <Avatar name={e.member.display_name} />
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate font-display font-semibold">{e.member.display_name}</span>
+              <span className="truncate font-display font-semibold">
+                <Nick nick={e.member.display_name} name={e.member.full_name} />
+              </span>
               <span className="font-display text-lg font-bold">{e.total}</span>
             </div>
             <DepthBar value={e.total} max={max} color={i === 0 ? "from-sun to-krill-light" : undefined} />
@@ -92,7 +96,7 @@ export function BestDiveList({ entries, showDate = true }: { entries: BestDive[]
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
               <span className="truncate font-display font-semibold">
-                {e.member.display_name}
+                <Nick nick={e.member.display_name} name={e.member.full_name} />
                 {isFullDepth(e.score) ? <span title="Perfect day"> 💎</span> : null}
               </span>
               <span className="font-display text-lg font-bold">{e.score}</span>
@@ -128,7 +132,9 @@ export function StreakList({ entries }: { entries: StreakEntry[] }) {
         >
           <Avatar name={e.member.display_name} />
           <div className="min-w-0 flex-1">
-            <div className="truncate font-display font-semibold">{e.member.display_name}</div>
+            <div className="truncate font-display font-semibold">
+              <Nick nick={e.member.display_name} name={e.member.full_name} />
+            </div>
             <div className="text-xs text-mist">
               {streakTitle(e.current)} · longest ever {e.longest}
               {e.playedToday ? " · dived today ✅" : e.current > 0 ? " · not yet today ⏳" : ""}
@@ -167,7 +173,9 @@ export function WeekGridTable({ rows, days, today }: { rows: GridRow[]; days: st
               <td className="rounded-l-xl bg-white/5 py-2 pl-2 pr-3">
                 <span className="flex items-center gap-2">
                   <Avatar name={r.member.display_name} size="sm" />
-                  <span className="truncate font-display font-semibold">{r.member.display_name}</span>
+                  <span className="truncate font-display font-semibold">
+                    <Nick nick={r.member.display_name} name={r.member.full_name} />
+                  </span>
                 </span>
               </td>
               {r.cells.map((c, i) => (

@@ -37,6 +37,7 @@ export async function getSession(): Promise<Session | null> {
     // create the Krillion profile. The first profile ever becomes admin.
     const { data: created, error: createError } = await supabase.rpc("krillion_ensure_profile", {
       p_display_name: (user.user_metadata?.display_name as string | undefined) ?? null,
+      p_full_name: (user.user_metadata?.full_name as string | undefined) ?? null,
     });
     if (createError || !created) redirect("/setup");
     profile = created;

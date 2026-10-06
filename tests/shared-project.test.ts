@@ -9,10 +9,15 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const MIGRATION = readFileSync(
-  path.resolve(__dirname, "../supabase/migrations/20261006000000_krillion_init.sql"),
-  "utf8",
-);
+import { readdirSync } from "node:fs";
+
+const MIGRATIONS_DIR = path.resolve(__dirname, "../supabase/migrations");
+/** Every migration, in filename order, as one script. */
+const MIGRATION = readdirSync(MIGRATIONS_DIR)
+  .filter((f) => f.endsWith(".sql"))
+  .sort()
+  .map((f) => readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"))
+  .join("\n");
 
 const FIRST = "a1111111-1111-4111-8111-111111111111";
 const RIOT = "a2222222-2222-4222-8222-222222222222";

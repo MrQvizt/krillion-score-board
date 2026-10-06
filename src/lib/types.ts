@@ -2,7 +2,10 @@
 
 export type Profile = {
   id: string;
+  /** The nick, shown everywhere. */
   display_name: string;
+  /** Real name, shown on hover over the nick. Admins fill it in for older accounts. */
+  full_name: string | null;
   is_admin: boolean;
   created_at: string;
 };
@@ -35,6 +38,7 @@ export type Score = {
 export type AdminUser = {
   id: string;
   display_name: string;
+  full_name: string | null;
   email: string;
   is_admin: boolean;
   created_at: string;
@@ -52,7 +56,7 @@ export type Database = {
     Tables: {
       krillion_profiles: Table<
         Profile,
-        { id: string; display_name: string; is_admin?: boolean; created_at?: string },
+        { id: string; display_name: string; full_name?: string | null; is_admin?: boolean; created_at?: string },
         Partial<Profile>
       >;
       krillion_boards: Table<
@@ -91,7 +95,10 @@ export type Database = {
       krillion_is_admin: { Args: Record<string, never>; Returns: boolean };
       krillion_is_board_member: { Args: { target_board: string }; Returns: boolean };
       krillion_shares_board_with: { Args: { target_user: string }; Returns: boolean };
-      krillion_ensure_profile: { Args: { p_display_name?: string | null }; Returns: Profile };
+      krillion_ensure_profile: {
+        Args: { p_display_name?: string | null; p_full_name?: string | null };
+        Returns: Profile;
+      };
       krillion_admin_list_users: { Args: Record<string, never>; Returns: AdminUser[] };
     };
     Enums: Record<string, never>;

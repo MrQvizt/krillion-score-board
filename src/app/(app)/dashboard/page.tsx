@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { deleteScore } from "@/app/actions/scores";
 import { ScoreForm } from "@/components/ScoreForm";
-import { DepthBar, EmptyState, Section, StatTile } from "@/components/ui";
+import { DepthBar, EmptyState, Nick, Section, StatTile } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
 import { KRILLION_URL, MAX_DAILY_SCORE } from "@/lib/constants";
 import {
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         <div>
           <p className="eyebrow">{formatLong(today)}</p>
           <h1 className="heading mt-1 text-4xl sm:text-5xl">
-            Ahoy, {profile.display_name} {playedToday ? "🌊" : "👋"}
+            Ahoy, <Nick nick={profile.display_name} name={profile.full_name} /> {playedToday ? "🌊" : "👋"}
           </h1>
           <p className="mt-2 text-mist">
             {playedToday ? (

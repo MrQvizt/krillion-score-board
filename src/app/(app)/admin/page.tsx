@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { setAdmin } from "@/app/actions/admin";
+import { setAdmin, setFullName } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
-import { Avatar, EmptyState, Section } from "@/components/ui";
+import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/types";
 
@@ -69,12 +69,13 @@ export default async function AdminPage() {
         </Section>
       </div>
 
-      <Section title="Divers" emoji="🧜" subtitle={`${allUsers.length} account${allUsers.length === 1 ? "" : "s"}. Assign them to boards from a board's manage page.`}>
+      <Section title="Divers" emoji="🧜" subtitle={`${allUsers.length} account${allUsers.length === 1 ? "" : "s"}. Add a real name to show it on hover over the nick. Assign divers to boards from a board's manage page.`}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-separate border-spacing-y-1 text-sm">
+          <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
             <thead>
               <tr className="text-left text-xs text-mist">
-                <th className="font-semibold">Diver</th>
+                <th className="font-semibold">Nick</th>
+                <th className="font-semibold">Name</th>
                 <th className="font-semibold">Email</th>
                 <th className="font-semibold">Boards</th>
                 <th className="font-semibold">Joined</th>
@@ -87,9 +88,28 @@ export default async function AdminPage() {
                   <td className="rounded-l-xl bg-white/5 py-2 pl-2 pr-3">
                     <span className="flex items-center gap-2">
                       <Avatar name={u.display_name} size="sm" />
-                      <span className="font-display font-semibold">{u.display_name}</span>
+                      <span className="font-display font-semibold">
+                        <Nick nick={u.display_name} name={u.full_name} />
+                      </span>
                       {u.id === user.id ? <span className="chip">you</span> : null}
                     </span>
+                  </td>
+                  <td className="bg-white/5 pr-3">
+                    <form action={setFullName} className="flex items-center gap-1">
+                      <input type="hidden" name="user_id" value={u.id} />
+                      <input
+                        name="full_name"
+                        className="input w-44"
+                        placeholder="Add name"
+                        maxLength={80}
+                        defaultValue={u.full_name ?? ""}
+                        aria-label={`Real name for ${u.display_name}`}
+                        autoComplete="off"
+                      />
+                      <button type="submit" className="btn-ghost btn-sm">
+                        Save
+                      </button>
+                    </form>
                   </td>
                   <td className="bg-white/5 pr-3 text-mist">{u.email}</td>
                   <td className="bg-white/5 pr-3 text-mist">{boardsPerUser.get(u.id) ?? 0}</td>

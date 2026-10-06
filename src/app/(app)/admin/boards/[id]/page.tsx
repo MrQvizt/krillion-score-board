@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { addMember, deleteBoard, removeMember } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
 import { ConfirmForm } from "@/components/ConfirmForm";
-import { Avatar, EmptyState, Section } from "@/components/ui";
+import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/types";
 
@@ -74,8 +74,13 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
                   <li key={u.id} className="flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2">
                     <Avatar name={u.display_name} size="sm" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-display font-semibold">{u.display_name}</div>
-                      <div className="truncate text-xs text-mist">{u.email}</div>
+                      <div className="truncate font-display font-semibold">
+                        <Nick nick={u.display_name} name={u.full_name} />
+                      </div>
+                      <div className="truncate text-xs text-mist">
+                        {u.full_name ? `${u.full_name} · ` : ""}
+                        {u.email}
+                      </div>
                     </div>
                     <form action={removeMember}>
                       <input type="hidden" name="board_id" value={board.id} />
@@ -99,8 +104,13 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
                   <li key={u.id} className="flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2">
                     <Avatar name={u.display_name} size="sm" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-display font-semibold">{u.display_name}</div>
-                      <div className="truncate text-xs text-mist">{u.email}</div>
+                      <div className="truncate font-display font-semibold">
+                        <Nick nick={u.display_name} name={u.full_name} />
+                      </div>
+                      <div className="truncate text-xs text-mist">
+                        {u.full_name ? `${u.full_name} · ` : ""}
+                        {u.email}
+                      </div>
                     </div>
                     <form action={addMember}>
                       <input type="hidden" name="board_id" value={board.id} />

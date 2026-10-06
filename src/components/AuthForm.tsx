@@ -16,21 +16,39 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       {next ? <input type="hidden" name="next" value={next} /> : null}
 
       {isSignup ? (
-        <div>
-          <label className="label" htmlFor="display_name">
-            Diver name
-          </label>
-          <input
-            id="display_name"
-            name="display_name"
-            className="input"
-            placeholder="Captain Taleggio"
-            maxLength={40}
-            required
-            defaultValue={v.display_name ?? ""}
-            autoComplete="nickname"
-          />
-        </div>
+        <>
+          <div>
+            <label className="label" htmlFor="full_name">
+              Name
+            </label>
+            <input
+              id="full_name"
+              name="full_name"
+              className="input"
+              placeholder="Anna Andersson"
+              maxLength={80}
+              required
+              defaultValue={v.full_name ?? ""}
+              autoComplete="name"
+            />
+            <p className="mt-1 text-xs text-mist">Only shown when someone hovers over your nick.</p>
+          </div>
+          <div>
+            <label className="label" htmlFor="display_name">
+              Nick name
+            </label>
+            <input
+              id="display_name"
+              name="display_name"
+              className="input"
+              placeholder="Captain Taleggio"
+              maxLength={40}
+              required
+              defaultValue={v.display_name ?? ""}
+              autoComplete="nickname"
+            />
+          </div>
+        </>
       ) : null}
 
       <div>

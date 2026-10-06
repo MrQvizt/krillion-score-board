@@ -46,7 +46,7 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
   let scores: { user_id: string; played_on: string; score: number; note: string }[] = [];
   if (memberIds.length) {
     const [{ data: profiles }, { data: scoreRows }] = await Promise.all([
-      supabase.from("krillion_profiles").select("id, display_name").in("id", memberIds),
+      supabase.from("krillion_profiles").select("id, display_name, full_name").in("id", memberIds),
       supabase.from("krillion_scores").select("user_id, played_on, score, note").in("user_id", memberIds),
     ]);
     members = profiles ?? [];

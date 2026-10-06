@@ -2,7 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/app/actions/auth";
 import { KRILLION_URL } from "@/lib/constants";
 import type { Profile } from "@/lib/types";
-import { Avatar } from "./ui";
+import { Avatar, Nick } from "./ui";
 import { Logo } from "./Logo";
 
 export function Nav({ profile }: { profile: Profile }) {
@@ -24,7 +24,7 @@ export function Nav({ profile }: { profile: Profile }) {
           ) : null}
           <span className="chip hidden items-center gap-2 sm:inline-flex">
             <Avatar name={profile.display_name} size="sm" />
-            {profile.display_name}
+            <Nick nick={profile.display_name} name={profile.full_name} />
           </span>
           <form action={signOut}>
             <button type="submit" className="btn-ghost btn-sm" title="Sign out">

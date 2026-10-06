@@ -21,11 +21,13 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
   const email = str(formData, "email").toLowerCase();
   const password = typeof formData.get("password") === "string" ? (formData.get("password") as string) : "";
   const displayName = str(formData, "display_name").slice(0, 40);
-  const values = { email, display_name: displayName };
+  const fullName = str(formData, "full_name").slice(0, 80);
+  const values = { email, display_name: displayName, full_name: fullName };
 
   if (!EMAIL_RE.test(email)) return { error: "That email doesn't look right.", values };
   if (password.length < 8) return { error: "Password needs at least 8 characters.", values };
-  if (!displayName) return { error: "Pick a diver name so your friends know who's winning.", values };
+  if (!fullName) return { error: "Tell us your name. It only shows when someone hovers over your nick.", values };
+  if (!displayName) return { error: "Pick a nick name so your friends know who's winning.", values };
 
   const admin = createAdminClient();
   const supabase = await createClient();
@@ -36,7 +38,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
       email,
       password,
       email_confirm: true,
-      user_metadata: { display_name: displayName },
+      user_metadata: { display_name: displayName, full_name: fullName },
     });
     if (error) {
       const taken = /already|exists|registered/i.test(error.message);
@@ -55,6 +57,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
       await admin.from("krillion_profiles").upsert({
         id: data.user.id,
         display_name: displayName,
+        full_name: fullName,
         is_admin: true,
       });
     }
@@ -64,7 +67,7 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: displayName, full_name: fullName } },
     });
     if (error) return { error: error.message, values };
     if (!data.session) {

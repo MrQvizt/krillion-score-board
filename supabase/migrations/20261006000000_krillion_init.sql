@@ -127,6 +127,10 @@ $$;
 -- "enable row level security" statements, does not notice when that form sits
 -- inside a function body, and splices its statement mid-function, which
 -- breaks the $$ quoting.
+-- Dropped first so this file stays re-runnable after later migrations change
+-- the signature: a plain "or replace" would leave a second overload behind.
+drop function if exists public.krillion_ensure_profile(text);
+drop function if exists public.krillion_ensure_profile(text, text);
 create or replace function public.krillion_ensure_profile(p_display_name text default null)
 returns public.krillion_profiles
 language plpgsql
@@ -196,7 +200,8 @@ end;
 $$;
 
 -- Admin only: list every Krillion account with its email (emails live in auth.users).
-create or replace function public.krillion_admin_list_users()
+drop function if exists public.krillion_admin_list_users();
+create function public.krillion_admin_list_users()
 returns table (
   id uuid,
   display_name text,

@@ -2,7 +2,7 @@
 
 A fun little site for logging your daily [Krillion](https://krillion.io/) score and racing your friends.
 
-- **Accounts** with email + password. No confirmation email.
+- **Accounts** with email + password. No confirmation email. Everyone picks a nick and gives their real name; the name shows when you hover over a nick, and admins can fill it in for older accounts.
 - **Admin** creates score boards and assigns accounts to them.
 - **Every board** shows the weekly podium, deepest single dive, total depth, hot streakers, today's dives, and a day-by-day heat grid. Browse back through previous weeks.
 - **Scores** are 0–700 (7 prompts × up to 100 points). 1 point = 10 metres of depth, just like in the game. Days follow UTC, matching Krillion's reset.
@@ -26,7 +26,7 @@ One side effect to know about: Arena Tracker's trigger creates an Arena Tracker 
 
 ### Apply the schema
 
-1. Supabase dashboard → **SQL Editor** → paste and run [`supabase/migrations/20261006000000_krillion_init.sql`](supabase/migrations/20261006000000_krillion_init.sql). This is how Arena Tracker's migrations were applied too. The editor appends its own `enable row level security` statements for the new tables; that is fine, the file already enables it. (The function bodies deliberately avoid `select ... into`, which that editor helper misreads as table creation.)
+1. Supabase dashboard → **SQL Editor** → paste and run every file in [`supabase/migrations`](supabase/migrations), in filename order, each as its own query. This is how Arena Tracker's migrations were applied too. The editor appends its own `enable row level security` statements for the new tables; that is fine, the file already enables it. (The function bodies deliberately avoid `select ... into`, which that editor helper misreads as table creation.)
    - Or with the Supabase CLI, from this repo: `supabase link --project-ref jogqfqzhsoxomuozxasd` then `supabase db push`.
 2. **Settings → API**: the project URL is already in `.env.example`. The publishable (anon) key is the same value Arena Tracker uses as `VITE_SUPABASE_ANON_KEY`. The `service_role` key is the secret one, server-only.
 

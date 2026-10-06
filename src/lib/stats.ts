@@ -14,6 +14,7 @@ export type ScoreRow = {
 export type Member = {
   id: string;
   display_name: string;
+  full_name?: string | null;
 };
 
 export type BestDive = { member: Member; score: number; played_on: string; note: string };

@@ -94,3 +94,16 @@ export async function setAdmin(formData: FormData): Promise<void> {
   await supabase.from("krillion_profiles").update({ is_admin: value }).eq("id", userId);
   revalidatePath("/", "layout");
 }
+
+/** Admin only: set or clear a diver's real name (shown on hover over the nick). */
+export async function setFullName(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const userId = text(formData, "user_id", 64);
+  const fullName = text(formData, "full_name", 80);
+  if (!userId) return;
+  await supabase
+    .from("krillion_profiles")
+    .update({ full_name: fullName || null })
+    .eq("id", userId);
+  revalidatePath("/", "layout");
+}

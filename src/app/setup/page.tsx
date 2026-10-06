@@ -51,6 +51,7 @@ export default async function SetupPage() {
   if (user) {
     const profile = await supabase.rpc("krillion_ensure_profile", {
       p_display_name: (user.user_metadata?.display_name as string | undefined) ?? null,
+      p_full_name: (user.user_metadata?.full_name as string | undefined) ?? null,
     });
     checks.push(
       profile.error

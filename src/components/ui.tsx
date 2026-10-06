@@ -28,6 +28,15 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md"
   );
 }
 
+/** A diver's nick, with their real name as the hover title when it is known. */
+export function Nick({ nick, name, className }: { nick: string; name?: string | null; className?: string }) {
+  return (
+    <span className={className} title={name ?? undefined}>
+      {nick}
+    </span>
+  );
+}
+
 export function StatTile({
   label,
   value,
