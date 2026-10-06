@@ -1,0 +1,15 @@
+/** Krillion serves 7 prompts a day; the rarest answer on a prompt pays 100. */
+export const PROMPTS_PER_DAY = 7;
+export const MAX_PROMPT_SCORE = 100;
+export const MAX_DAILY_SCORE = PROMPTS_PER_DAY * MAX_PROMPT_SCORE; // 700
+
+/** Krillion converts points to dive depth at 1 point = 4 metres. */
+export const METRES_PER_POINT = 4;
+
+/** Scores older than this cannot be logged (keeps the date picker sane). */
+export const EARLIEST_PLAY_DATE = "2024-01-01";
+
+export const SITE_NAME = "Krillion Score Board";
+export const SITE_TAGLINE = "Log your daily dive. Out-krill your friends.";
+
+export const BOARD_EMOJIS = ["🦐", "🐙", "🐡", "🦑", "🐠", "🐳", "🦀", "🐚", "🌊", "⚓", "🏆", "🔥"];
