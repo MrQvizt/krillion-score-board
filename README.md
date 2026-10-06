@@ -36,6 +36,16 @@ Put the project's `service_role` key in `SUPABASE_SERVICE_ROLE_KEY`. Sign-ups ar
 
 Do **not** turn off **Confirm email** under Authentication → Providers → Email instead. Auth settings are project-wide, so that would also switch off confirmation for Arena Tracker sign-ups. (Without the service role key the app falls back to a normal sign-up, which in this project means a confirmation email.)
 
+### Password reset emails
+
+"Forgot password?" on the login page emails a link that comes back to `/auth/callback` on this site. Supabase only follows links to addresses on its allow-list, so add these once under **Authentication → URL Configuration → Redirect URLs** (Site URL can stay as it is; Arena Tracker is unaffected):
+
+- `https://krillionscore.click/auth/callback`
+- `https://*-bpluz.vercel.app/auth/callback` (preview deployments)
+- `http://localhost:3000/auth/callback` (local development)
+
+Without them the link lands on the project's Site URL instead of this site. The link must be opened in the same browser that asked for it. Logged-in users change their password from the "Change password" link in the footer.
+
 ### Who is admin?
 
 - The **first Krillion profile ever created** is admin. That is the first person to sign up or log in on this site, so do that yourself right after deploying.

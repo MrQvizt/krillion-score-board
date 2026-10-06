@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminEmails } from "@/lib/supabase/env";
@@ -110,4 +111,62 @@ export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+/** Where the browser is, for links in emails. Server actions carry the Origin header. */
+async function requestOrigin(): Promise<string> {
+  const h = await headers();
+  const origin = h.get("origin");
+  if (origin) return origin;
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${h.get("host") ?? "localhost:3000"}`;
+}
+
+/**
+ * Sends the password-reset email. The link in it comes back to /auth/callback,
+ * which turns it into a session and continues to /reset-password. The reply
+ * never reveals whether the email has an account.
+ */
+export async function requestPasswordReset(_prev: FormState, formData: FormData): Promise<FormState> {
+  const email = str(formData, "email").toLowerCase();
+  const values = { email };
+  if (!EMAIL_RE.test(email)) return { error: "That email doesn't look right.", values };
+
+  const supabase = await createClient();
+  const origin = await requestOrigin();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+  if (error && error.status === 429) {
+    return { error: "Too many emails in a short time. Try again in a bit.", values };
+  }
+  if (error && error.status !== 400 && error.status !== 422) {
+    return { error: error.message, values };
+  }
+  return {
+    success: "If that email has an account, a reset link is on its way. Open it in this browser.",
+    values: { email: "" },
+  };
+}
+
+/** Sets a new password for the signed-in user (after a reset link, or just to change it). */
+export async function updatePassword(_prev: FormState, formData: FormData): Promise<FormState> {
+  const password = typeof formData.get("password") === "string" ? (formData.get("password") as string) : "";
+  const confirm = typeof formData.get("confirm") === "string" ? (formData.get("confirm") as string) : "";
+  if (password.length < 8) return { error: "Password needs at least 8 characters." };
+  if (password !== confirm) return { error: "The two passwords don't match." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/reset-password");
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return {
+      error: /same password/i.test(error.message) ? "That's already your password. Pick a new one." : error.message,
+    };
+  }
+  return { success: "Password updated. You're logged in with it now." };
 }
