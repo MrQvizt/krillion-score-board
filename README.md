@@ -44,6 +44,10 @@ Do **not** turn off **Confirm email** under Authentication → Providers → Ema
 - Admins can promote or demote others on the **Admin** page.
 - Manual fallback, in the SQL editor: `update public.krillion_profiles set is_admin = true where id = (select id from auth.users where email = 'you@example.com');`
 
+### If the dashboard is blank
+
+Open `/setup` on the deployed site (for example https://krillionscore.click/setup). It runs the same database calls as the dashboard with your own session and prints the exact error, with the fix next to it. Nearly always it means the migration above has not been run yet.
+
 ## 2. Run locally
 
 ```bash
