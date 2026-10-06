@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { getSession } from "@/lib/auth";
-import { MAX_DAILY_SCORE, SITE_TAGLINE } from "@/lib/constants";
+import { KRILLION_URL, MAX_DAILY_SCORE, SITE_TAGLINE } from "@/lib/constants";
 
 const FEATURES = [
   {
@@ -31,6 +31,9 @@ export default async function Home() {
       <header className="flex items-center justify-between">
         <Logo />
         <nav className="flex items-center gap-2">
+          <a href={KRILLION_URL} target="_blank" rel="noreferrer" className="btn-aqua btn-sm">
+            Play Krillion ↗
+          </a>
           <Link href="/login" className="btn-ghost btn-sm">
             Log in
           </Link>
@@ -75,7 +78,7 @@ export default async function Home() {
 
       <footer className="pb-6 text-center text-xs text-mist/60">
         A fan-made score board. Play the actual game at{" "}
-        <a href="https://krillion.io/" className="text-aqua hover:underline" rel="noreferrer">
+        <a href={KRILLION_URL} className="text-aqua hover:underline" rel="noreferrer">
           krillion.io
         </a>
         . Not affiliated with Krillion.

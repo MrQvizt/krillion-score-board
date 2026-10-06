@@ -4,7 +4,7 @@ import { deleteScore } from "@/app/actions/scores";
 import { ScoreForm } from "@/components/ScoreForm";
 import { DepthBar, EmptyState, Section, StatTile } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
-import { MAX_DAILY_SCORE } from "@/lib/constants";
+import { KRILLION_URL, MAX_DAILY_SCORE } from "@/lib/constants";
 import {
   currentStreak,
   depthMetres,
@@ -58,9 +58,17 @@ export default async function DashboardPage() {
             Ahoy, {profile.display_name} {playedToday ? "🌊" : "👋"}
           </h1>
           <p className="mt-2 text-mist">
-            {playedToday
-              ? "Today's dive is in the log. Go taunt your friends."
-              : "You haven't logged today's dive yet. Don't let the streak dry out."}
+            {playedToday ? (
+              "Today's dive is in the log. Go taunt your friends."
+            ) : (
+              <>
+                You haven&apos;t logged today&apos;s dive yet.{" "}
+                <a href={KRILLION_URL} target="_blank" rel="noreferrer" className="text-aqua hover:underline">
+                  Play today&apos;s Krillion ↗
+                </a>{" "}
+                and log the score below. Don&apos;t let the streak dry out.
+              </>
+            )}
           </p>
         </div>
       </div>

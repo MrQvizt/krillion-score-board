@@ -9,6 +9,9 @@ export const METRES_PER_POINT = 10;
 /** Scores older than this cannot be logged (keeps the date picker sane). */
 export const EARLIEST_PLAY_DATE = "2024-01-01";
 
+/** The actual game. Linked from the top bar and the daily reminder. */
+export const KRILLION_URL = "https://krillion.io/";
+
 export const SITE_NAME = "Krillion Score Board";
 export const SITE_TAGLINE = "Log your daily dive. Out-krill your friends.";
 
