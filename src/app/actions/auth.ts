@@ -45,16 +45,17 @@ export async function signUp(_prev: FormState, formData: FormData): Promise<Form
         values,
       };
     }
-    if (data.user) {
-      // No trigger on the shared auth.users table, so create the profile here.
-      const { count } = await admin
-        .from("krillion_profiles")
-        .select("id", { count: "exact", head: true });
-      const isFirst = (count ?? 0) === 0;
+    // No trigger on the shared auth.users table. The Krillion profile is created
+    // by krillion_ensure_profile() on the first page load, which also applies the
+    // shared-project admin rules (first profile ever, Arena Tracker's app_admins)
+    // and picks up the display name from the user metadata set above.
+    // ADMIN_EMAILS is the one rule only this server knows about, so seed that
+    // profile here; ensure_profile then finds it and leaves it alone.
+    if (data.user && adminEmails().includes(email)) {
       await admin.from("krillion_profiles").upsert({
         id: data.user.id,
         display_name: displayName,
-        is_admin: isFirst || adminEmails().includes(email),
+        is_admin: true,
       });
     }
   } else {

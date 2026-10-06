@@ -1,23 +1,35 @@
 -- Krillion Score Board: initial schema
 --
--- Designed for a Supabase project that is SHARED with other apps:
---   * every object is prefixed with krillion_ so nothing collides,
---   * no trigger is attached to auth.users (other apps may have their own),
---   * profiles are created lazily via krillion_ensure_profile() when a user
---     first opens this app, so users of the other apps are not touched.
+-- Designed for a Supabase project that is SHARED with other apps. Arena Tracker
+-- (github.com/MrQvizt/ArenaTracker) lives in the same project, so:
+--   * every object is prefixed krillion_ and nothing collides with Arena
+--     Tracker's profiles, leaderboard_groups, app_admins, ...;
+--   * no trigger is attached to auth.users (Arena Tracker already owns
+--     on_auth_user_created). Profiles are created lazily by
+--     krillion_ensure_profile() when a user first opens this app, so users of
+--     the other apps are not touched until then;
+--   * every statement is re-runnable, so pasting this file into the SQL editor
+--     a second time is a no-op rather than an error.
+--
+-- Two soft links to Arena Tracker's data, both optional and guarded so this
+-- file also works in a project that does not have those tables:
+--   * a new Krillion profile takes its display name from the player's Arena
+--     Tracker Riot name (or legacy gamer tag) when they have one;
+--   * members of public.app_admins (Arena Tracker's site admins) are Krillion
+--     admins from their first visit.
 
 -- ---------------------------------------------------------------------------
 -- Tables
 -- ---------------------------------------------------------------------------
 
-create table public.krillion_profiles (
+create table if not exists public.krillion_profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text not null check (char_length(display_name) between 1 and 40),
   is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
 
-create table public.krillion_boards (
+create table if not exists public.krillion_boards (
   id uuid primary key default gen_random_uuid(),
   name text not null check (char_length(name) between 1 and 60),
   description text not null default '' check (char_length(description) <= 300),
@@ -26,17 +38,18 @@ create table public.krillion_boards (
   created_at timestamptz not null default now()
 );
 
-create table public.krillion_board_members (
+create table if not exists public.krillion_board_members (
   board_id uuid not null references public.krillion_boards (id) on delete cascade,
   user_id uuid not null references public.krillion_profiles (id) on delete cascade,
   added_at timestamptz not null default now(),
   primary key (board_id, user_id)
 );
 
-create index krillion_board_members_user_id_idx on public.krillion_board_members (user_id);
+create index if not exists krillion_board_members_user_id_idx
+  on public.krillion_board_members (user_id);
 
 -- One Krillion dive per player per day. 7 prompts x max 100 points = 700.
-create table public.krillion_scores (
+create table if not exists public.krillion_scores (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.krillion_profiles (id) on delete cascade,
   played_on date not null,
@@ -47,7 +60,8 @@ create table public.krillion_scores (
   unique (user_id, played_on)
 );
 
-create index krillion_scores_played_on_idx on public.krillion_scores (played_on);
+create index if not exists krillion_scores_played_on_idx
+  on public.krillion_scores (played_on);
 
 -- ---------------------------------------------------------------------------
 -- Helper functions (security definer so policies never recurse into RLS)
@@ -98,7 +112,15 @@ as $$
 $$;
 
 -- Creates the caller's profile if it does not exist yet and returns it.
--- The very first profile ever created becomes admin.
+--
+-- Display name, first match wins: the explicit argument, the display_name the
+-- sign-up form stored in auth user metadata, the player's Arena Tracker Riot
+-- name / gamer tag, the local part of their email.
+--
+-- Admin: the very first profile ever created, or anyone in Arena Tracker's
+-- public.app_admins. The Arena Tracker lookups run as dynamic SQL inside their
+-- own exception blocks so a project without those tables (or with a different
+-- `profiles` shape) simply skips them.
 create or replace function public.krillion_ensure_profile(p_display_name text default null)
 returns public.krillion_profiles
 language plpgsql
@@ -109,6 +131,8 @@ declare
   uid uuid := auth.uid();
   result public.krillion_profiles;
   chosen_name text;
+  linked_name text;
+  linked_admin boolean := false;
 begin
   if uid is null then
     raise exception 'not authenticated' using errcode = '28000';
@@ -119,9 +143,31 @@ begin
     return result;
   end if;
 
+  -- Arena Tracker: Riot game name, falling back to the legacy gamer tag.
+  begin
+    execute 'select coalesce(nullif(trim(p.riot_game_name), ''''), nullif(trim(p.gamer_tag), ''''))'
+         || ' from public.profiles p where p.id = $1'
+      into linked_name
+      using uid;
+  exception
+    when undefined_table or undefined_column then
+      linked_name := null;
+  end;
+
+  -- Arena Tracker: site admins.
+  begin
+    execute 'select exists (select 1 from public.app_admins a where a.user_id = $1)'
+      into linked_admin
+      using uid;
+  exception
+    when undefined_table or undefined_column then
+      linked_admin := false;
+  end;
+
   select coalesce(
     nullif(trim(p_display_name), ''),
     nullif(trim(u.raw_user_meta_data ->> 'display_name'), ''),
+    linked_name,
     split_part(coalesce(u.email, 'diver'), '@', 1)
   )
   into chosen_name
@@ -131,8 +177,8 @@ begin
   insert into public.krillion_profiles (id, display_name, is_admin)
   values (
     uid,
-    left(coalesce(chosen_name, 'diver'), 40),
-    not exists (select 1 from public.krillion_profiles)
+    left(coalesce(chosen_name, linked_name, 'diver'), 40),
+    coalesce(linked_admin, false) or not exists (select 1 from public.krillion_profiles)
   )
   on conflict (id) do nothing;
 
@@ -188,6 +234,7 @@ begin
 end;
 $$;
 
+drop trigger if exists krillion_scores_touch_updated_at on public.krillion_scores;
 create trigger krillion_scores_touch_updated_at
   before update on public.krillion_scores
   for each row execute function public.krillion_touch_updated_at();
@@ -202,59 +249,71 @@ alter table public.krillion_board_members enable row level security;
 alter table public.krillion_scores enable row level security;
 
 -- profiles
+drop policy if exists "krillion_profiles: admins do anything" on public.krillion_profiles;
 create policy "krillion_profiles: admins do anything"
   on public.krillion_profiles for all
   using (public.krillion_is_admin())
   with check (public.krillion_is_admin());
 
+drop policy if exists "krillion_profiles: read self and board mates" on public.krillion_profiles;
 create policy "krillion_profiles: read self and board mates"
   on public.krillion_profiles for select
   using (id = auth.uid() or public.krillion_shares_board_with(id));
 
+drop policy if exists "krillion_profiles: edit own name" on public.krillion_profiles;
 create policy "krillion_profiles: edit own name"
   on public.krillion_profiles for update
   using (id = auth.uid())
   with check (id = auth.uid() and is_admin = public.krillion_is_admin());
 
 -- boards
+drop policy if exists "krillion_boards: admins do anything" on public.krillion_boards;
 create policy "krillion_boards: admins do anything"
   on public.krillion_boards for all
   using (public.krillion_is_admin())
   with check (public.krillion_is_admin());
 
+drop policy if exists "krillion_boards: members can read" on public.krillion_boards;
 create policy "krillion_boards: members can read"
   on public.krillion_boards for select
   using (public.krillion_is_board_member(id));
 
 -- board_members
+drop policy if exists "krillion_board_members: admins do anything" on public.krillion_board_members;
 create policy "krillion_board_members: admins do anything"
   on public.krillion_board_members for all
   using (public.krillion_is_admin())
   with check (public.krillion_is_admin());
 
+drop policy if exists "krillion_board_members: members see their board mates" on public.krillion_board_members;
 create policy "krillion_board_members: members see their board mates"
   on public.krillion_board_members for select
   using (public.krillion_is_board_member(board_id));
 
 -- scores
+drop policy if exists "krillion_scores: admins do anything" on public.krillion_scores;
 create policy "krillion_scores: admins do anything"
   on public.krillion_scores for all
   using (public.krillion_is_admin())
   with check (public.krillion_is_admin());
 
+drop policy if exists "krillion_scores: read own and board mates" on public.krillion_scores;
 create policy "krillion_scores: read own and board mates"
   on public.krillion_scores for select
   using (user_id = auth.uid() or public.krillion_shares_board_with(user_id));
 
+drop policy if exists "krillion_scores: insert own" on public.krillion_scores;
 create policy "krillion_scores: insert own"
   on public.krillion_scores for insert
   with check (user_id = auth.uid());
 
+drop policy if exists "krillion_scores: update own" on public.krillion_scores;
 create policy "krillion_scores: update own"
   on public.krillion_scores for update
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 
+drop policy if exists "krillion_scores: delete own" on public.krillion_scores;
 create policy "krillion_scores: delete own"
   on public.krillion_scores for delete
   using (user_id = auth.uid());

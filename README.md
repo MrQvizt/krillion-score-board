@@ -9,32 +9,38 @@ A fun little site for logging your daily [Krillion](https://krillion.io/) score 
 
 Built with Next.js 16 (App Router), Tailwind v4 and Supabase (Postgres + Auth). Deploys to Vercel in a couple of clicks.
 
-## 1. Set up Supabase
+## 1. Supabase: one project shared with Arena Tracker
 
-The schema is built to live in a Supabase project that is **shared with other apps**:
+Krillion runs in the **same Supabase project as [Arena Tracker](https://github.com/MrQvizt/ArenaTracker)** (project ref `jogqfqzhsoxomuozxasd`). The two apps share `auth.users`, so anyone with an Arena Tracker account logs in here with the same email and password, and vice versa. Everything else is kept apart:
 
-- every table and function is prefixed `krillion_` (`krillion_profiles`, `krillion_boards`, `krillion_board_members`, `krillion_scores`), so nothing collides;
-- nothing is attached to `auth.users`: no trigger, no changes. Users of the other apps are untouched until they open this site, at which point `krillion_ensure_profile()` creates their Krillion profile.
+- every Krillion table, function, trigger and policy is prefixed `krillion_` (`krillion_profiles`, `krillion_boards`, `krillion_board_members`, `krillion_scores`), so nothing collides with Arena Tracker's `profiles`, `leaderboard_groups`, `app_admins`, ...;
+- nothing is attached to `auth.users`. Arena Tracker's `on_auth_user_created` trigger stays the only one. A Krillion profile is created by `krillion_ensure_profile()` the first time someone opens this site, so Arena Tracker players are untouched until then;
+- the migration is re-runnable. Pasting it into the SQL editor a second time is a no-op, not an error.
 
-Steps:
+Two small, optional links to Arena Tracker's data. Both are guarded, so the migration also works in a project without those tables:
 
-1. Open the project's **SQL Editor** and run [`supabase/migrations/20261006000000_krillion_init.sql`](supabase/migrations/20261006000000_krillion_init.sql).
-   - Or with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`.
-2. Grab your keys from **Settings → API**.
+- a new Krillion profile takes its **display name** from the player's Arena Tracker Riot name (or legacy gamer tag) when they have one, instead of the local part of their email;
+- anyone in Arena Tracker's `public.app_admins` table is a **Krillion admin** from their first visit.
 
-Because auth is shared, anyone with an account in one of the other apps can log in here with the same email and password. They won't see anything until an admin puts them on a board.
+One side effect to know about: Arena Tracker's trigger creates an Arena Tracker `profiles` row for every new auth user, including people who sign up here. That row has no Riot name or gamer tag, so it never shows up on Arena Tracker's leaderboards. It is harmless.
+
+### Apply the schema
+
+1. Supabase dashboard → **SQL Editor** → paste and run [`supabase/migrations/20261006000000_krillion_init.sql`](supabase/migrations/20261006000000_krillion_init.sql). This is how Arena Tracker's migrations were applied too.
+   - Or with the Supabase CLI, from this repo: `supabase link --project-ref jogqfqzhsoxomuozxasd` then `supabase db push`.
+2. **Settings → API**: the project URL is already in `.env.example`. The publishable (anon) key is the same value Arena Tracker uses as `VITE_SUPABASE_ANON_KEY`. The `service_role` key is the secret one, server-only.
 
 ### Accounts without email confirmation
 
-Pick one of these:
+Put the project's `service_role` key in `SUPABASE_SERVICE_ROLE_KEY`. Sign-ups are then created server-side as already-confirmed users, and the key never reaches the browser.
 
-- **Recommended:** put the project's `service_role` key in `SUPABASE_SERVICE_ROLE_KEY`. Sign-ups are then created server-side as already-confirmed users. The key never reaches the browser.
-- **Or:** in the Supabase dashboard go to **Authentication → Providers → Email** and turn off **Confirm email**. Then the service role key is not needed.
+Do **not** turn off **Confirm email** under Authentication → Providers → Email instead. Auth settings are project-wide, so that would also switch off confirmation for Arena Tracker sign-ups. (Without the service role key the app falls back to a normal sign-up, which in this project means a confirmation email.)
 
 ### Who is admin?
 
 - The **first Krillion profile ever created** is admin. That is the first person to sign up or log in on this site, so do that yourself right after deploying.
-- Any email listed in `ADMIN_EMAILS` (comma-separated) is made admin when it signs up (needs the service role key). Set this too, to be safe.
+- Anyone in Arena Tracker's **`app_admins`** table is a Krillion admin on first visit. The site owner is already in there.
+- Any email listed in `ADMIN_EMAILS` (comma-separated) is made admin when it signs up (needs the service role key).
 - Admins can promote or demote others on the **Admin** page.
 - Manual fallback, in the SQL editor: `update public.krillion_profiles set is_admin = true where id = (select id from auth.users where email = 'you@example.com');`
 
@@ -75,7 +81,7 @@ npm run build
 | `src/lib/stats.ts` | Pure leaderboard maths (tested in `tests/stats.test.ts`) |
 | `src/lib/week.ts` | UTC date and ISO-week helpers |
 | `src/proxy.ts` | Refreshes the Supabase session cookie and guards private routes |
-| `supabase/migrations` | Database schema + RLS, all prefixed `krillion_` (tested in `tests/schema.test.ts`) |
+| `supabase/migrations` | Database schema + RLS, all prefixed `krillion_` (tested in `tests/schema.test.ts`; the Arena Tracker links and re-runnability in `tests/shared-project.test.ts`) |
 
 ### Security model
 
