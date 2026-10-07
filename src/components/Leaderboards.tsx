@@ -20,36 +20,39 @@ const PODIUM_STYLES = [
   "from-bronze/25 to-bronze/5 border-bronze/30",
 ];
 
-export function Podium({ entries }: { entries: WeeklyTotal[] }) {
-  const top = entries.filter((e) => e.dives > 0).slice(0, 3);
-  if (top.length === 0) {
-    return <EmptyState emoji="🏝️">Nobody has dived this week yet. Be the first splash.</EmptyState>;
-  }
-  // Classic podium order: 2nd, 1st, 3rd
+type PodiumEntry = {
+  key: string;
+  nick: string;
+  name?: string | null;
+  value: number;
+  detail: React.ReactNode;
+};
+
+/** Three cards in classic podium order (2nd, 1st, 3rd). */
+function PodiumCards({ entries }: { entries: PodiumEntry[] }) {
+  const top = entries.slice(0, 3);
   const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
-  const rankOf = (e: WeeklyTotal) => top.indexOf(e);
+  const rankOf = (e: PodiumEntry) => top.indexOf(e);
   return (
     <div className={`grid gap-3 ${order.length === 3 ? "sm:grid-cols-3 sm:items-end" : order.length === 2 ? "sm:grid-cols-2" : ""}`}>
       {order.map((e) => {
         const rank = rankOf(e);
         return (
           <div
-            key={e.member.id}
+            key={e.key}
             className={`animate-pop rounded-3xl border bg-gradient-to-b p-5 text-center ${PODIUM_STYLES[rank]} ${
               rank === 0 ? "order-first sm:order-none sm:py-8" : rank === 1 ? "sm:py-6" : ""
             }`}
           >
             <div className="text-4xl">{medal(rank)}</div>
             <div className="mt-2 flex justify-center">
-              <Avatar name={e.member.display_name} size="lg" />
+              <Avatar name={e.nick} size="lg" />
             </div>
             <div className="heading mt-2 truncate text-xl">
-              <Nick nick={e.member.display_name} name={e.member.full_name} />
+              <Nick nick={e.nick} name={e.name} />
             </div>
-            <div className="heading mt-1 text-4xl">{e.total}</div>
-            <div className="text-xs text-mist">
-              {e.dives} dive{e.dives === 1 ? "" : "s"} · avg {e.average} · {formatMetres(depthMetres(e.total))}
-            </div>
+            <div className="heading mt-1 text-4xl">{e.value}</div>
+            <div className="text-xs text-mist">{e.detail}</div>
           </div>
         );
       })}
@@ -57,11 +60,50 @@ export function Podium({ entries }: { entries: WeeklyTotal[] }) {
   );
 }
 
-/**
- * Ranked weekly totals. `offset` is the rank of the first entry (3 when the
- * list continues under a podium); `scaleMax` keeps the bars comparable with a
- * list rendered elsewhere (the podium leader's total).
- */
+/** Weekly podium: biggest total this week among divers who have dived. */
+export function Podium({ entries }: { entries: WeeklyTotal[] }) {
+  const top = entries.filter((e) => e.dives > 0).slice(0, 3);
+  if (top.length === 0) {
+    return <EmptyState emoji="🏝️">Nobody has dived this week yet. Be the first splash.</EmptyState>;
+  }
+  return (
+    <PodiumCards
+      entries={top.map((e) => ({
+        key: e.member.id,
+        nick: e.member.display_name,
+        name: e.member.full_name,
+        value: e.total,
+        detail: `${e.dives} dive${e.dives === 1 ? "" : "s"} · avg ${e.average} · ${formatMetres(depthMetres(e.total))}`,
+      }))}
+    />
+  );
+}
+
+/** Daily podium: today's best dives. */
+export function DailyPodium({ entries }: { entries: BestDive[] }) {
+  const top = entries.slice(0, 3);
+  if (top.length === 0) {
+    return <EmptyState emoji="🌅">Nobody has dived today yet. Play, log your score, and own the top spot.</EmptyState>;
+  }
+  return (
+    <PodiumCards
+      entries={top.map((e) => ({
+        key: e.member.id,
+        nick: e.member.display_name,
+        name: e.member.full_name,
+        value: e.score,
+        detail: (
+          <>
+            {formatMetres(depthMetres(e.score))}
+            {isFullDepth(e.score) ? " · 💎 perfect" : ""}
+            {e.note ? <span className="block truncate italic">“{e.note}”</span> : null}
+          </>
+        ),
+      }))}
+    />
+  );
+}
+
 export function TotalsList({
   entries,
   offset = 0,
@@ -96,7 +138,16 @@ export function TotalsList({
   );
 }
 
-export function BestDiveList({ entries, showDate = true }: { entries: BestDive[]; showDate?: boolean }) {
+/** Ranked single dives. `offset` is the rank of the first entry (3 when the list continues under a podium). */
+export function BestDiveList({
+  entries,
+  showDate = true,
+  offset = 0,
+}: {
+  entries: BestDive[];
+  showDate?: boolean;
+  offset?: number;
+}) {
   if (entries.length === 0) {
     return <EmptyState>No dives logged yet.</EmptyState>;
   }
@@ -104,7 +155,7 @@ export function BestDiveList({ entries, showDate = true }: { entries: BestDive[]
     <ol className="space-y-3">
       {entries.map((e, i) => (
         <li key={e.member.id} className="flex items-center gap-3">
-          <span className="w-8 shrink-0 text-center font-display text-lg font-bold text-mist">{medal(i)}</span>
+          <span className="w-8 shrink-0 text-center font-display text-lg font-bold text-mist">{medal(i + offset)}</span>
           <Avatar name={e.member.display_name} />
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
@@ -114,7 +165,7 @@ export function BestDiveList({ entries, showDate = true }: { entries: BestDive[]
               </span>
               <span className="font-display text-lg font-bold">{e.score}</span>
             </div>
-            <DepthBar value={e.score} max={MAX_DAILY_SCORE} color={i === 0 ? "from-sun to-krill-light" : undefined} />
+            <DepthBar value={e.score} max={MAX_DAILY_SCORE} color={i + offset === 0 ? "from-sun to-krill-light" : undefined} />
             <div className="mt-1 flex justify-between gap-2 text-xs text-mist">
               <span>
                 {showDate ? `${formatShort(e.played_on)} · ` : ""}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { BestDiveList, Podium, StreakList, TotalsList, WeekGridTable } from "@/components/Leaderboards";
+import { BestDiveList, DailyPodium, Podium, StreakList, TotalsList, WeekGridTable } from "@/components/Leaderboards";
 import { Section, StatTile } from "@/components/ui";
 import { WeekNav } from "@/components/WeekNav";
 import { requireSession } from "@/lib/auth";
@@ -17,7 +17,7 @@ import {
   weeklyTotals,
   type Member,
 } from "@/lib/stats";
-import { isInWeek, isValidDateString, todayUtc, weekDays, weekStart } from "@/lib/week";
+import { formatLong, isInWeek, isValidDateString, todayUtc, weekDays, weekStart } from "@/lib/week";
 
 export async function generateMetadata(props: PageProps<"/boards/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -34,7 +34,6 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
   const today = todayUtc();
   const thisWeek = weekStart(today);
   const start = typeof w === "string" && isValidDateString(w) ? weekStart(w) : thisWeek;
-  const viewingCurrent = start === thisWeek;
 
   const { data: board } = await supabase.from("krillion_boards").select("*").eq("id", id).maybeSingle();
   if (!board) notFound();
@@ -106,6 +105,20 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
         />
       </div>
 
+      <Section
+        title="Today's podium"
+        emoji="🌊"
+        subtitle={`${formatLong(today)} · best dives logged today, UTC. ${todays.length} of ${members.length} diver${members.length === 1 ? "" : "s"} down so far.`}
+      >
+        <DailyPodium entries={todays} />
+        {todays.length > 3 ? (
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="eyebrow mb-3">Also dived today</p>
+            <BestDiveList entries={todays.slice(3)} showDate={false} offset={3} />
+          </div>
+        ) : null}
+      </Section>
+
       <Section title="Weekly podium" emoji="🏆" subtitle="Biggest total score this week.">
         <Podium entries={totals} />
         {belowPodium.length > 0 && onPodium.size > 0 ? (
@@ -125,18 +138,9 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
         </Section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Section title="Hot streakers" emoji="🔥" subtitle="Consecutive days with a logged dive. Today still counts until midnight UTC.">
-          <StreakList entries={streaks} />
-        </Section>
-        <Section
-          title="Today's dives"
-          emoji="🌊"
-          subtitle={viewingCurrent ? "Who has already been down today." : "Always shows today, whichever week you're browsing."}
-        >
-          <BestDiveList entries={todays} showDate={false} />
-        </Section>
-      </div>
+      <Section title="Hot streakers" emoji="🔥" subtitle="Consecutive days with a logged dive. Today still counts until midnight UTC.">
+        <StreakList entries={streaks} />
+      </Section>
 
       <Section title="The week, day by day" emoji="🗓️" subtitle="Brighter means deeper. 💎 is a perfect 700.">
         <WeekGridTable rows={grid} days={weekDays(start)} today={today} />
