@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { BOARD_EMOJIS } from "@/lib/constants";
 import type { FormState } from "./types";
 
@@ -128,4 +129,25 @@ export async function declineJoinRequest(formData: FormData): Promise<void> {
   if (!boardId || !userId) return;
   await supabase.from("krillion_board_join_requests").delete().eq("board_id", boardId).eq("user_id", userId);
   revalidatePath("/", "layout");
+}
+
+/**
+ * Admin only: give a diver a new password. Uses the service role, which is
+ * the only way to change someone else's password. Accounts are shared with
+ * Arena Tracker (same Supabase project), so this is their password there too.
+ */
+export async function setUserPassword(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const userId = text(formData, "user_id", 64);
+  const password = typeof formData.get("password") === "string" ? (formData.get("password") as string) : "";
+  if (!userId) return { error: "Missing diver." };
+  if (password.length < 8) return { error: "At least 8 characters." };
+
+  const admin = createAdminClient();
+  if (!admin) {
+    return { error: "SUPABASE_SERVICE_ROLE_KEY is not set on the server, so passwords cannot be changed here." };
+  }
+  const { error } = await admin.auth.admin.updateUserById(userId, { password });
+  if (error) return { error: error.message };
+  return { success: "Password set." };
 }

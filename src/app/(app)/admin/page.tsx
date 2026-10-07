@@ -3,6 +3,7 @@ import Link from "next/link";
 import { setAdmin, setFullName } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
 import { JoinRequestList, pairRequests } from "@/components/JoinRequests";
+import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminUser } from "@/lib/types";
@@ -80,14 +81,15 @@ export default async function AdminPage() {
         </Section>
       </div>
 
-      <Section title="Divers" emoji="🧜" subtitle={`${allUsers.length} account${allUsers.length === 1 ? "" : "s"}. Add a real name to show it on hover over the nick. Assign divers to boards from a board's manage page.`}>
+      <Section title="Divers" emoji="🧜" subtitle={`${allUsers.length} account${allUsers.length === 1 ? "" : "s"}. Add a real name to show it on hover over the nick. Setting a password here also sets it for Arena Tracker, since accounts are shared.`}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
+          <table className="w-full min-w-[980px] border-separate border-spacing-y-1 text-sm">
             <thead>
               <tr className="text-left text-xs text-mist">
                 <th className="font-semibold">Nick</th>
                 <th className="font-semibold">Name</th>
                 <th className="font-semibold">Email</th>
+                <th className="font-semibold">Password</th>
                 <th className="font-semibold">Boards</th>
                 <th className="font-semibold">Joined</th>
                 <th className="text-right font-semibold">Role</th>
@@ -123,6 +125,9 @@ export default async function AdminPage() {
                     </form>
                   </td>
                   <td className="bg-white/5 pr-3 text-mist">{u.email}</td>
+                  <td className="bg-white/5 pr-3">
+                    <SetPasswordForm userId={u.id} nick={u.display_name} />
+                  </td>
                   <td className="bg-white/5 pr-3 text-mist">{boardsPerUser.get(u.id) ?? 0}</td>
                   <td className="bg-white/5 pr-3 text-mist">{u.created_at.slice(0, 10)}</td>
                   <td className="rounded-r-xl bg-white/5 pr-2 text-right">

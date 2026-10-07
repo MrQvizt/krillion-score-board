@@ -68,16 +68,9 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       </div>
 
       <div>
-        <div className="flex items-baseline justify-between">
-          <label className="label" htmlFor="password">
-            Password
-          </label>
-          {!isSignup ? (
-            <Link href="/forgot-password" className="text-xs text-aqua hover:underline">
-              Forgot password?
-            </Link>
-          ) : null}
-        </div>
+        <label className="label" htmlFor="password">
+          Password
+        </label>
         <input
           id="password"
           name="password"

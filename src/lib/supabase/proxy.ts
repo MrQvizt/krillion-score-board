@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "./env";
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/signup", "/setup", "/forgot-password", "/auth/callback"]);
+const PUBLIC_PATHS = new Set(["/", "/login", "/signup", "/setup"]);
 
 /** Refreshes the auth session cookie and guards private routes. */
 export async function updateSession(request: NextRequest) {
