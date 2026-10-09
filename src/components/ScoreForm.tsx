@@ -31,7 +31,7 @@ export function ScoreForm({ today, existing }: { today: string; existing: Existi
 
   return (
     <form action={action} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className="label" htmlFor="played_on">
             Dive day (UTC)
@@ -100,7 +100,7 @@ export function ScoreForm({ today, existing }: { today: string; existing: Existi
             "Type your score to see how deep you went."
           )}
         </p>
-        <SubmitButton pendingText="Splashing…">{already ? "Update dive" : "Log dive 🌊"}</SubmitButton>
+        <SubmitButton className="btn-primary w-full sm:w-auto" pendingText="Splashing…">{already ? "Update dive" : "Log dive 🌊"}</SubmitButton>
       </div>
 
       <Flash state={state} />

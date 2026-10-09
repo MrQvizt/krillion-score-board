@@ -51,7 +51,7 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Section title="Details" emoji="✏️">
           <BoardForm board={board} />
           <div className="mt-6 border-t border-white/10 pt-4">

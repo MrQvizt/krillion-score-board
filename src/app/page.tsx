@@ -28,11 +28,13 @@ export default async function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6">
-      <header className="flex items-center justify-between">
-        <Logo />
-        <nav className="flex items-center gap-2">
-          <a href={KRILLION_URL} target="_blank" rel="noreferrer" className="btn-aqua btn-sm">
-            Play Krillion ↗
+      <header className="flex items-center justify-between gap-3">
+        <Logo compact />
+        <nav className="flex items-center gap-1.5 sm:gap-2">
+          <a href={KRILLION_URL} target="_blank" rel="noreferrer" className="btn-aqua btn-sm hidden min-[360px]:inline-flex">
+            <span>
+              Play<span className="hidden sm:inline"> Krillion</span> ↗
+            </span>
           </a>
           <Link href="/login" className="btn-ghost btn-sm">
             Log in
@@ -66,7 +68,7 @@ export default async function Home() {
         <p className="mt-4 text-sm text-mist/70">Email and password. No confirmation emails, no fuss.</p>
       </section>
 
-      <section className="grid gap-4 pb-16 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 pb-16 sm:grid-cols-3">
         {FEATURES.map((f) => (
           <div key={f.title} className="card p-6">
             <div className="text-4xl">{f.emoji}</div>

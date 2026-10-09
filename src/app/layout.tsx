@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fredoka, Nunito } from "next/font/google";
 import { Bubbles } from "@/components/Bubbles";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
@@ -21,12 +21,17 @@ export const metadata: Metadata = {
   description: SITE_TAGLINE,
 };
 
+/** Tints the mobile browser's address bar to match the top of the page. */
+export const viewport: Viewport = {
+  themeColor: "#071b36",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fredoka.variable} ${nunito.variable} h-full antialiased`}>
       <body className="relative flex min-h-full flex-col overflow-x-hidden">
         <Bubbles />
-        <div className="relative z-10 flex min-h-screen flex-col">{children}</div>
+        <div className="relative z-10 flex min-h-dvh flex-col">{children}</div>
       </body>
     </html>
   );

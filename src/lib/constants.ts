@@ -13,6 +13,8 @@ export const EARLIEST_PLAY_DATE = "2024-01-01";
 export const KRILLION_URL = "https://krillion.io/";
 
 export const SITE_NAME = "Krillion Score Board";
+/** For the top bar on phones. */
+export const SITE_SHORT_NAME = "Krillion";
 export const SITE_TAGLINE = "Log your daily dive. Out-krill your friends.";
 
 export const BOARD_EMOJIS = ["🦐", "🐙", "🐡", "🦑", "🐠", "🐳", "🦀", "🐚", "🌊", "⚓", "🏆", "🔥"];

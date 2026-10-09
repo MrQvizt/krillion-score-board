@@ -11,7 +11,7 @@ import {
   type StreakEntry,
   type WeeklyTotal,
 } from "@/lib/stats";
-import { formatShort, weekdayShort } from "@/lib/week";
+import { formatShort, parseDate, weekdayShort } from "@/lib/week";
 import { Avatar, DepthBar, EmptyState, Nick } from "./ui";
 
 const PODIUM_STYLES = [
@@ -28,31 +28,39 @@ type PodiumEntry = {
   detail: React.ReactNode;
 };
 
-/** Three cards in classic podium order (2nd, 1st, 3rd). */
+/**
+ * Three cards in classic podium order (2nd, 1st, 3rd). On phones they are
+ * compact rows, 1st first, so the podium does not fill several screens.
+ */
 function PodiumCards({ entries }: { entries: PodiumEntry[] }) {
   const top = entries.slice(0, 3);
   const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
   const rankOf = (e: PodiumEntry) => top.indexOf(e);
   return (
-    <div className={`grid gap-3 ${order.length === 3 ? "sm:grid-cols-3 sm:items-end" : order.length === 2 ? "sm:grid-cols-2" : ""}`}>
+    <div
+      className={`grid grid-cols-1 gap-3 ${order.length === 3 ? "sm:grid-cols-3 sm:items-end" : order.length === 2 ? "sm:grid-cols-2" : ""}`}
+    >
       {order.map((e) => {
         const rank = rankOf(e);
         return (
           <div
             key={e.key}
-            className={`animate-pop rounded-3xl border bg-gradient-to-b p-5 text-center ${PODIUM_STYLES[rank]} ${
+            className={`animate-pop flex min-w-0 items-center gap-3 rounded-3xl border bg-gradient-to-b px-4 py-3 sm:flex-col sm:gap-0 sm:p-5 sm:text-center ${PODIUM_STYLES[rank]} ${
               rank === 0 ? "order-first sm:order-none sm:py-8" : rank === 1 ? "sm:py-6" : ""
             }`}
           >
-            <div className="text-4xl">{medal(rank)}</div>
-            <div className="mt-2 flex justify-center">
+            <div className="text-2xl sm:text-4xl">{medal(rank)}</div>
+            <span className="hidden sm:mt-2 sm:block">
               <Avatar name={e.nick} size="lg" />
+            </span>
+            {/* One block beside the score on phones; its lines join the centred column from sm up. */}
+            <div className="min-w-0 flex-1 sm:contents">
+              <div className="heading truncate text-lg sm:order-1 sm:mt-2 sm:w-full sm:text-xl">
+                <Nick nick={e.nick} name={e.name} />
+              </div>
+              <div className="text-xs text-mist sm:order-3 sm:w-full">{e.detail}</div>
             </div>
-            <div className="heading mt-2 truncate text-xl">
-              <Nick nick={e.nick} name={e.name} />
-            </div>
-            <div className="heading mt-1 text-4xl">{e.value}</div>
-            <div className="text-xs text-mist">{e.detail}</div>
+            <div className="heading text-2xl sm:order-2 sm:mt-1 sm:text-4xl">{e.value}</div>
           </div>
         );
       })}
@@ -167,7 +175,7 @@ export function BestDiveList({
             </div>
             <DepthBar value={e.score} max={MAX_DAILY_SCORE} color={i + offset === 0 ? "from-sun to-krill-light" : undefined} />
             <div className="mt-1 flex justify-between gap-2 text-xs text-mist">
-              <span>
+              <span className="shrink-0">
                 {showDate ? `${formatShort(e.played_on)} · ` : ""}
                 {formatMetres(depthMetres(e.score))}
               </span>
@@ -217,51 +225,94 @@ export function StreakList({ entries }: { entries: StreakEntry[] }) {
 export function WeekGridTable({ rows, days, today }: { rows: GridRow[]; days: string[]; today: string }) {
   if (rows.length === 0) return <EmptyState>No members on this board yet.</EmptyState>;
   return (
-    <div className="-mx-2 overflow-x-auto px-2">
-      <table className="w-full min-w-[560px] border-separate border-spacing-y-1 text-sm">
-        <thead>
-          <tr className="text-xs text-mist">
-            <th className="text-left font-semibold">Diver</th>
-            {days.map((d) => (
-              <th key={d} className={`px-1 text-center font-semibold ${d === today ? "text-aqua" : ""}`}>
-                {weekdayShort(d)}
-                <div className="text-[10px] font-normal opacity-70">{formatShort(d)}</div>
-              </th>
-            ))}
-            <th className="text-right font-semibold">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.member.id}>
-              <td className="rounded-l-xl bg-white/5 py-2 pl-2 pr-3">
-                <span className="flex items-center gap-2">
-                  <Avatar name={r.member.display_name} size="sm" />
-                  <span className="truncate font-display font-semibold">
-                    <Nick nick={r.member.display_name} name={r.member.full_name} />
-                  </span>
-                </span>
-              </td>
-              {r.cells.map((c, i) => (
-                <td key={i} className={`bg-white/5 px-1 text-center ${days[i] === today ? "bg-aqua/10" : ""}`}>
-                  {c === null ? (
-                    <span className="text-mist/40">·</span>
-                  ) : (
-                    <span
-                      className={`inline-block min-w-10 rounded-lg px-1.5 py-0.5 font-display font-bold ${heat(c)}`}
-                      title={formatMetres(depthMetres(c))}
-                    >
-                      {c}
-                    </span>
-                  )}
-                </td>
-              ))}
-              <td className="rounded-r-xl bg-white/5 pr-2 text-right font-display text-base font-bold">{r.total}</td>
-            </tr>
+    <>
+      {/* Phones: one card per diver with the week as a strip of seven, so nothing scrolls sideways. */}
+      <div className="md:hidden">
+        <div className="grid grid-cols-7 gap-1 px-3 pb-1 text-center text-[10px] text-mist">
+          {days.map((d) => (
+            <div key={d} className={d === today ? "font-bold text-aqua" : ""}>
+              {weekdayShort(d)}
+              <div className="opacity-70">{parseDate(d).getUTCDate()}</div>
+            </div>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </div>
+        <ol className="space-y-2">
+          {rows.map((r) => (
+            <li key={r.member.id} className="rounded-2xl bg-white/5 p-3">
+              <div className="flex items-center gap-2">
+                <Avatar name={r.member.display_name} size="sm" />
+                <span className="min-w-0 flex-1 truncate font-display font-semibold">
+                  <Nick nick={r.member.display_name} name={r.member.full_name} />
+                </span>
+                <span className="font-display text-base font-bold">{r.total}</span>
+              </div>
+              <div className="mt-2 grid grid-cols-7 gap-1 text-center text-xs">
+                {r.cells.map((c, i) => (
+                  <div key={i} className={`rounded-lg py-0.5 ${days[i] === today ? "bg-aqua/10" : ""}`}>
+                    {c === null ? (
+                      <span className="text-mist/40">·</span>
+                    ) : (
+                      <span
+                        className={`block rounded-md py-0.5 font-display font-bold ${heat(c)}`}
+                        title={`${weekdayShort(days[i])} ${formatShort(days[i])}: ${formatMetres(depthMetres(c))}`}
+                      >
+                        {c}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="-mx-2 hidden overflow-x-auto px-2 md:block">
+        <table className="w-full min-w-[560px] border-separate border-spacing-y-1 text-sm">
+          <thead>
+            <tr className="text-xs text-mist">
+              <th className="text-left font-semibold">Diver</th>
+              {days.map((d) => (
+                <th key={d} className={`px-1 text-center font-semibold ${d === today ? "text-aqua" : ""}`}>
+                  {weekdayShort(d)}
+                  <div className="text-[10px] font-normal opacity-70">{formatShort(d)}</div>
+                </th>
+              ))}
+              <th className="text-right font-semibold">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.member.id}>
+                <td className="rounded-l-xl bg-white/5 py-2 pl-2 pr-3">
+                  <span className="flex items-center gap-2">
+                    <Avatar name={r.member.display_name} size="sm" />
+                    <span className="truncate font-display font-semibold">
+                      <Nick nick={r.member.display_name} name={r.member.full_name} />
+                    </span>
+                  </span>
+                </td>
+                {r.cells.map((c, i) => (
+                  <td key={i} className={`bg-white/5 px-1 text-center ${days[i] === today ? "bg-aqua/10" : ""}`}>
+                    {c === null ? (
+                      <span className="text-mist/40">·</span>
+                    ) : (
+                      <span
+                        className={`inline-block min-w-10 rounded-lg px-1.5 py-0.5 font-display font-bold ${heat(c)}`}
+                        title={formatMetres(depthMetres(c))}
+                      >
+                        {c}
+                      </span>
+                    )}
+                  </td>
+                ))}
+                <td className="rounded-r-xl bg-white/5 pr-2 text-right font-display text-base font-bold">{r.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

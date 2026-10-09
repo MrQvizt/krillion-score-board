@@ -56,7 +56,7 @@ export function StatTile({
   return (
     <div className={`card bg-gradient-to-br p-4 sm:p-5 ${ring}`}>
       <p className="eyebrow">{label}</p>
-      <p className="heading mt-2 text-3xl sm:text-4xl">{value}</p>
+      <p className="heading mt-2 text-2xl break-words min-[400px]:text-3xl sm:text-4xl">{value}</p>
       {hint ? <p className="mt-1 text-xs text-mist">{hint}</p> : null}
     </div>
   );
@@ -76,7 +76,7 @@ export function Section({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="card p-5 sm:p-6">
+    <section className="card p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="heading flex items-center gap-2 text-xl sm:text-2xl">
