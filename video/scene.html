@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Join our Krill community</title>
+<title>Join our community</title>
 <link rel="stylesheet" href="build/scene.css" />
 <style>
   html, body { margin: 0; width: 1920px; height: 1080px; min-height: 0; overflow: hidden; background: #040f1f; }
@@ -78,7 +78,7 @@
   <section id="intro" class="layer flex flex-col items-center justify-center text-center">
     <div id="i-shrimp" class="text-[160px] leading-none drop-shadow-[0_0_40px_rgba(62,230,199,0.45)]">🦐</div>
     <p id="i-eyebrow" class="eyebrow mt-8 text-[22px]">Krillion Score Board</p>
-    <h1 id="i-title" class="heading mt-3 text-[112px] leading-[1.02]">Join our <span class="text-krill-light">Krill</span> community</h1>
+    <h1 id="i-title" class="heading mt-3 text-[112px] leading-[1.02]">Join our <span class="text-krill-light" data-bind="community"></span> community</h1>
     <p id="i-sub" class="mt-6 max-w-[1400px] text-[32px] leading-snug text-mist">
       Play Krillion every day, log your dive, and race the shoal on the
       <b class="text-foam"><span data-bind="emoji"></span>&nbsp;<span data-bind="board"></span></b> board.
@@ -113,7 +113,6 @@
         <li class="b"><span class="bi">✍️</span><span>Add your name, a nick, your email and a password.</span></li>
         <li class="b"><span class="bi">🤿</span><span>Tap <span class="uib krill">Dive in 🦐</span> No confirmation email, you're straight in.</span></li>
       </ul>
-      <div class="tip card mt-9 p-5 text-[21px] leading-snug text-mist">💡 Already on <b class="text-foam">Arena Tracker</b>? It's the same account. Just log in with that email and password.</div>
     </div>
 
     <!-- Captions: step 1, request to join -->
@@ -561,12 +560,17 @@
 /*
  * Everything on screen is a pure function of the time t (seconds), so the
  * renderer can step through it frame by frame: window.render(t).
- * Edit CONFIG to change the board, the example diver or the site address.
+ * Each community gets its own video: pick one with ?variant=<key> (render.mjs
+ * --variant <key>). Edit CONFIG for the example diver or the site address.
  */
+const VARIANTS = {
+  krill: { community: "Krill", board: "Evolution", emoji: "🐠", divers: 7 },
+  papero: { community: "Papero", board: "Papero", emoji: "🐙", divers: 7 },
+};
+const VARIANT = VARIANTS[new URLSearchParams(location.search).get("variant") ?? "krill"];
+if (!VARIANT) throw new Error("Unknown variant");
 const CONFIG = {
-  board: "Evolution",
-  emoji: "🐠",
-  divers: 7, // members before you join
+  ...VARIANT, // community, board, emoji, divers (members before you join)
   site: "krillionscore.click",
   name: "Sam Seaborg",
   nick: "Sam the Shrimp",
@@ -728,7 +732,7 @@ const PAGES = [
 ];
 
 const CAPS = [
-  { sel: "#cap-1a", a: 10.7, b: 23.9, bullets: [11.2, 15.0, 22.2], tip: 22.9 },
+  { sel: "#cap-1a", a: 10.7, b: 23.9, bullets: [11.2, 15.0, 22.2] },
   { sel: "#cap-1b", a: 24.2, b: 40.7, bullets: [24.7, 26.4, 27.9, 33.5, 38.0] },
   { sel: "#cap-3", a: 63.8, b: 78.7, bullets: [64.2, 65.9, 68.7, 72.2, 75.6] },
   { sel: "#cap-4", a: 79.0, b: 91.3, bullets: [79.3, 80.7, 83.9, 87.3] },
@@ -866,8 +870,6 @@ function renderCaps(t) {
       if (t >= c.bullets[i]) li.style.opacity = i === shown - 1 ? 1 : 0.6;
       li.classList.toggle("on", i === shown - 1);
     });
-    const tip = $(`${c.sel} .tip`);
-    if (tip) appear(tip, t, c.tip, Infinity, { dy: 18 });
   });
 }
 

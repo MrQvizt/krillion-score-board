@@ -1,9 +1,12 @@
-// Renders scene.html to join-the-krill-community.mp4, one frame at a time.
+// Renders scene.html to join-the-<variant>-community.mp4, one frame at a time.
 //
 //   npm install            (in video/, once; the repo root needs `npm install` too)
-//   npm run render         full video
-//   npm run stills         a few PNGs in build/stills/ for a quick look
-//   node render.mjs --stills 12.5,30
+//   npm run render         the Krill (Evolution) video
+//   npm run render -- --variant papero
+//   npm run stills         a few PNGs in build/stills/<variant>/ for a quick look
+//   node render.mjs --variant papero --stills 12.5,30
+//
+// Variants are defined in VARIANTS at the top of the script in scene.html.
 //
 // Needs ffmpeg on the PATH, and python3 with numpy for the soundtrack
 // (without them the video is rendered silent).
@@ -14,12 +17,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const build = path.join(here, "build");
-const output = path.join(here, "join-the-krill-community.mp4");
-mkdirSync(build, { recursive: true });
-
 const args = process.argv.slice(2);
-const stillsArg = args.includes("--stills") ? args[args.indexOf("--stills") + 1] : null;
+const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
+const variant = option("--variant") ?? "krill";
+const stillsArg = option("--stills");
+
+const build = path.join(here, "build");
+const output = path.join(here, `join-the-${variant}-community.mp4`);
+mkdirSync(build, { recursive: true });
 
 function run(cmd, cmdArgs) {
   const res = spawnSync(cmd, cmdArgs, { cwd: here, stdio: "inherit" });
@@ -32,7 +37,9 @@ run(path.join(here, "node_modules/.bin/tailwindcss"), ["-i", "scene.css", "-o", 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 page.on("pageerror", (err) => console.error("page error:", err.message));
-await page.goto(pathToFileURL(path.join(here, "scene.html")).href);
+const url = pathToFileURL(path.join(here, "scene.html"));
+url.searchParams.set("variant", variant);
+await page.goto(url.href);
 await page.evaluate(() => window.READY);
 const { fps, duration, events } = await page.evaluate(() => ({
   fps: window.FPS,
@@ -46,7 +53,7 @@ async function frame(t) {
 }
 
 if (stillsArg) {
-  const dir = path.join(build, "stills");
+  const dir = path.join(build, "stills", variant);
   mkdirSync(dir, { recursive: true });
   for (const t of stillsArg.split(",").map(Number)) {
     const file = path.join(dir, `t-${t.toFixed(2).padStart(6, "0")}.png`);
@@ -58,8 +65,8 @@ if (stillsArg) {
 }
 
 console.log("Writing soundtrack…");
-const eventsFile = path.join(build, "events.json");
-const wav = path.join(build, "soundtrack.wav");
+const eventsFile = path.join(build, `${variant}-events.json`);
+const wav = path.join(build, `${variant}-soundtrack.wav`);
 writeFileSync(eventsFile, JSON.stringify({ duration, events }));
 const audio = spawnSync("python3", [path.join(here, "soundtrack.py"), eventsFile, wav], { stdio: "inherit" });
 const withAudio = audio.status === 0;
