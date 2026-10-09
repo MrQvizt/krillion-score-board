@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Join our Krill community</title>
+<link rel="stylesheet" href="build/scene.css" />
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; min-height: 0; overflow: hidden; background: #040f1f; }
+  #frame {
+    position: relative; width: 1920px; height: 1080px; overflow: hidden;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(62 230 199 / 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgb(255 111 97 / 0.12), transparent 60%),
+      linear-gradient(180deg, var(--color-ocean) 0%, var(--color-deep) 45%, var(--color-abyss) 100%);
+  }
+  .layer { position: absolute; inset: 0; }
+  .bubble { position: absolute; bottom: 0; border-radius: 9999px; border: 1px solid rgb(62 230 199 / 0.3); background: rgb(62 230 199 / 0.1); }
+
+  /* Step progress pills */
+  #steps { position: absolute; left: 80px; top: 46px; display: flex; align-items: center; gap: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 20px 8px 8px; border-radius: 999px; font: 600 21px var(--font-display); color: var(--color-mist); background: rgb(255 255 255 / 0.05); border: 1px solid rgb(255 255 255 / 0.12); }
+  .pill .n { display: inline-flex; width: 34px; height: 34px; border-radius: 999px; align-items: center; justify-content: center; background: rgb(255 255 255 / 0.1); color: var(--color-foam); font-weight: 700; }
+  .pill.active { color: var(--color-abyss); background: linear-gradient(90deg, var(--color-krill), var(--color-krill-light)); border-color: transparent; box-shadow: 0 10px 30px -10px rgb(255 111 97 / 0.6); }
+  .pill.active .n { background: rgb(4 15 31 / 0.18); color: var(--color-abyss); }
+  .pill.done { color: var(--color-aqua); border-color: rgb(62 230 199 / 0.4); }
+  .pill.done .n { background: rgb(62 230 199 / 0.2); color: var(--color-aqua); }
+  .pill-line { width: 34px; height: 2px; background: rgb(255 255 255 / 0.15); }
+
+  /* Caption panel */
+  .cap { position: absolute; left: 80px; top: 150px; width: 570px; }
+  .cap ul { margin-top: 34px; display: flex; flex-direction: column; gap: 18px; }
+  .b { display: flex; gap: 16px; align-items: flex-start; font: 600 25px/1.4 var(--font-sans); color: #dceaf8; }
+  .b b { color: var(--color-foam); font-weight: 800; }
+  .bi { flex: none; width: 46px; height: 46px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; background: rgb(255 255 255 / 0.06); border: 1px solid rgb(255 255 255 / 0.12); margin-top: -4px; }
+  .b.on .bi { border-color: rgb(62 230 199 / 0.7); box-shadow: 0 0 24px -6px rgb(62 230 199 / 0.7); }
+  .uib { display: inline-flex; align-items: center; padding: 1px 14px 3px; border-radius: 999px; font: 600 21px var(--font-display); color: var(--color-abyss); white-space: nowrap; vertical-align: 2px; }
+  .uib.krill { background: linear-gradient(90deg, var(--color-krill), var(--color-krill-light)); }
+  .uib.aqua { background: linear-gradient(90deg, var(--color-aqua), var(--color-aqua-deep)); }
+  .uib.sun { background: rgb(255 209 102 / 0.12); color: var(--color-sun); border: 1px solid rgb(255 209 102 / 0.45); }
+
+  /* Browser window */
+  #browser { position: absolute; left: 700px; top: 128px; width: 1140px; height: 900px; border-radius: 22px; overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.14); background: var(--color-abyss);
+    box-shadow: 0 40px 120px -20px rgb(0 0 0 / 0.75), 0 0 90px -30px rgb(62 230 199 / 0.35); }
+  #chrome { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 18px; background: #0c2241; border-bottom: 1px solid rgb(255 255 255 / 0.08); }
+  .dot { width: 13px; height: 13px; border-radius: 50%; }
+  .arrows { color: rgb(159 184 211 / 0.6); font: 700 22px var(--font-sans); letter-spacing: 10px; margin: 0 4px 0 10px; }
+  #url { flex: 1; height: 32px; border-radius: 999px; background: rgb(4 15 31 / 0.7); display: flex; align-items: center; gap: 9px; padding: 0 16px; font: 600 15px var(--font-sans); color: var(--color-foam); }
+  #url .path { color: var(--color-mist); }
+  #viewport { position: relative; width: 1140px; height: 848px; overflow: hidden; }
+  #loadbar { position: absolute; left: 0; top: 0; height: 3px; z-index: 5; background: linear-gradient(90deg, var(--color-aqua), var(--color-krill-light)); }
+  #cam { position: absolute; left: 0; top: 0; width: 1140px; transform-origin: 0 0; }
+  .page { position: absolute; left: 0; top: 0; width: 1140px; min-height: 848px; display: flex; flex-direction: column;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(62 230 199 / 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgb(255 111 97 / 0.12), transparent 60%),
+      linear-gradient(180deg, var(--color-ocean) 0%, var(--color-deep) 45%, var(--color-abyss) 100%); }
+  .page header.app { position: relative; }
+
+  /* Fake inputs */
+  .fake { min-height: 50px; display: flex; align-items: center; white-space: pre; overflow: hidden; }
+  .fake .ph { color: rgb(159 184 211 / 0.6); }
+  .caret { display: inline-block; width: 2px; height: 1.1em; background: var(--color-aqua); margin-left: 2px; }
+
+  /* Cursor */
+  #cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 60; transform-origin: 4px 3px; filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.55)); }
+  #ripple { position: absolute; z-index: 59; border-radius: 50%; border: 3px solid var(--color-aqua); box-shadow: 0 0 18px rgb(62 230 199 / 0.6); }
+
+  #fade { position: absolute; inset: 0; background: #02070f; z-index: 90; }
+  .step-num { display: inline-flex; width: 52px; height: 52px; align-items: center; justify-content: center; border-radius: 999px; font: 700 26px var(--font-display); color: var(--color-abyss); background: linear-gradient(135deg, var(--color-krill), var(--color-krill-light)); }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="bubbles" class="layer"></div>
+
+  <!-- ============================== INTRO ============================== -->
+  <section id="intro" class="layer flex flex-col items-center justify-center text-center">
+    <div id="i-shrimp" class="text-[160px] leading-none drop-shadow-[0_0_40px_rgba(62,230,199,0.45)]">🦐</div>
+    <p id="i-eyebrow" class="eyebrow mt-8 text-[22px]">Krillion Score Board</p>
+    <h1 id="i-title" class="heading mt-3 text-[112px] leading-[1.02]">Join our <span class="text-krill-light">Krill</span> community</h1>
+    <p id="i-sub" class="mt-6 max-w-[1400px] text-[32px] leading-snug text-mist">
+      Play Krillion every day, log your dive, and race the shoal on the
+      <b class="text-foam"><span data-bind="emoji"></span>&nbsp;<span data-bind="board"></span></b> board.
+    </p>
+    <div class="mt-14 grid w-[1500px] grid-cols-3 gap-6 text-left">
+      <div class="i-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">1</span><span class="text-5xl">🙋</span></div>
+        <h3 class="heading mt-4 text-[36px]">Join</h3>
+        <p class="mt-2 text-[22px] leading-snug text-mist">Create an account on <b class="text-foam" data-bind="site"></b> and ask to join <b class="text-foam" data-bind="board"></b>.</p>
+      </div>
+      <div class="i-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">2</span><span class="text-5xl">🦐</span></div>
+        <h3 class="heading mt-4 text-[36px]">Play</h3>
+        <p class="mt-2 text-[22px] leading-snug text-mist">Dive into today's 7 Krillion prompts. Rare answers go deep.</p>
+      </div>
+      <div class="i-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">3</span><span class="text-5xl">📝</span></div>
+        <h3 class="heading mt-4 text-[36px]">Log</h3>
+        <p class="mt-2 text-[22px] leading-snug text-mist">Log your score and climb the <b class="text-foam" data-bind="board"></b> board.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== APP (captions + browser) ============================== -->
+  <section id="app" class="layer">
+    <!-- Captions: step 1, sign up -->
+    <div class="cap" id="cap-1a">
+      <p class="eyebrow text-[20px]">Step 1 · Join</p>
+      <h2 class="heading mt-3 text-[60px] leading-[1.04]">Create your diver account</h2>
+      <ul>
+        <li class="b"><span class="bi">🌐</span><span>Go to <b data-bind="site"></b> and tap <span class="uib krill">Join</span></span></li>
+        <li class="b"><span class="bi">✍️</span><span>Add your name, a nick, your email and a password.</span></li>
+        <li class="b"><span class="bi">🤿</span><span>Tap <span class="uib krill">Dive in 🦐</span> No confirmation email, you're straight in.</span></li>
+      </ul>
+      <div class="tip card mt-9 p-5 text-[21px] leading-snug text-mist">💡 Already on <b class="text-foam">Arena Tracker</b>? It's the same account. Just log in with that email and password.</div>
+    </div>
+
+    <!-- Captions: step 1, request to join -->
+    <div class="cap" id="cap-1b">
+      <p class="eyebrow text-[20px]">Step 1 · Join</p>
+      <h2 class="heading mt-3 text-[60px] leading-[1.04]">Ask to join <span data-bind="board"></span></h2>
+      <ul>
+        <li class="b"><span class="bi">🙋</span><span>Your dashboard lists the boards you can join under <b>Other boards</b>.</span></li>
+        <li class="b"><span class="bi" data-bind="emoji"></span><span>Find <b data-bind="board"></b> and tap <span class="uib aqua">Request to join</span></span></li>
+        <li class="b"><span class="bi">⏳</span><span>It now shows <span class="uib sun">⏳ requested</span> Changed your mind? Cancel any time.</span></li>
+        <li class="b"><span class="bi">🎉</span><span>Once an admin approves, <b data-bind="board"></b> moves up to <b>Your boards</b>.</span></li>
+        <li class="b"><span class="bi">🦐</span><span>Time to play: tap <span class="uib aqua">Play Krillion ↗</span> at the top.</span></li>
+      </ul>
+    </div>
+
+    <!-- Captions: step 3, log the dive -->
+    <div class="cap" id="cap-3">
+      <p class="eyebrow text-[20px]">Step 3 · Log</p>
+      <h2 class="heading mt-3 text-[60px] leading-[1.04]">Log your dive</h2>
+      <ul>
+        <li class="b"><span class="bi">📝</span><span>Back on your dashboard, find <b>Log a dive</b>.</span></li>
+        <li class="b"><span class="bi">🔢</span><span>The dive day is today (UTC). Type your <b>score</b>, 0–700.</span></li>
+        <li class="b"><span class="bi">🧀</span><span>Add a brag line if you like. It's optional.</span></li>
+        <li class="b"><span class="bi">🌊</span><span>Tap <span class="uib krill">Log dive 🌊</span> One score per day. Logging the same day again overwrites it.</span></li>
+        <li class="b"><span class="bi">🔥</span><span>Log every day before the UTC reset to keep your streak alive.</span></li>
+      </ul>
+    </div>
+
+    <!-- Captions: step 3, the board -->
+    <div class="cap" id="cap-4">
+      <p class="eyebrow text-[20px]">Step 3 · Log</p>
+      <h2 class="heading mt-3 text-[60px] leading-[1.04]">Race the shoal</h2>
+      <ul>
+        <li class="b"><span class="bi" data-bind="emoji"></span><span>Open <b data-bind="board"></b> from <b>Your boards</b>.</span></li>
+        <li class="b"><span class="bi">🌊</span><span><b>Today's podium:</b> the deepest dives logged today.</span></li>
+        <li class="b"><span class="bi">🏆</span><span><b>Weekly podium:</b> the biggest total. A fresh race every Monday.</span></li>
+        <li class="b"><span class="bi">🔥</span><span><b>Hot streakers:</b> who has logged the most days in a row.</span></li>
+      </ul>
+    </div>
+
+    <div id="browser">
+      <div id="chrome">
+        <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+        <span class="arrows">‹›</span>
+        <div id="url">
+          <svg width="13" height="15" viewBox="0 0 13 15" aria-hidden="true"><rect x="1" y="6.5" width="11" height="8" rx="2" fill="#3ee6c7"/><path d="M3.5 6.5V4.5a3 3 0 0 1 6 0v2" stroke="#3ee6c7" stroke-width="1.8" fill="none"/></svg>
+          <span><span data-bind="site"></span><span class="path" id="url-path"></span></span>
+        </div>
+      </div>
+      <div id="viewport">
+        <div id="loadbar"></div>
+        <div id="cam">
+
+          <!-- ---------- Landing page (src/app/page.tsx) ---------- -->
+          <div class="page" id="pg-landing">
+            <main class="mx-auto flex w-full max-w-5xl flex-1 flex-col px-6 py-6">
+              <header class="flex items-center justify-between">
+                <a class="group inline-flex items-center gap-2"><span class="wig inline-block text-2xl">🦐</span><span class="heading text-lg">Krillion Score Board</span></a>
+                <nav class="flex items-center gap-2">
+                  <a class="btn-aqua btn-sm">Play Krillion ↗</a>
+                  <a class="btn-ghost btn-sm">Log in</a>
+                  <a class="btn-primary btn-sm" id="land-join">Join</a>
+                </nav>
+              </header>
+              <section class="flex flex-1 flex-col items-center justify-center py-12 text-center">
+                <div class="float text-8xl drop-shadow-[0_0_30px_rgba(62,230,199,0.4)]">🦐</div>
+                <p class="eyebrow mt-8">Daily dives · Weekly glory</p>
+                <h1 class="heading mt-3 max-w-3xl text-7xl leading-[1.05]">Out-krill your <span class="text-krill-light">friends</span>.</h1>
+                <p class="mt-6 max-w-xl text-lg text-mist">Log your daily dive. Out-krill your friends. The obvious answer loses in Krillion, but the obvious choice for bragging rights is right here.</p>
+                <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+                  <a class="btn-primary text-lg">Create an account</a>
+                  <a class="btn-ghost text-lg">I already have one</a>
+                </div>
+                <p class="mt-4 text-sm text-mist/70">Email and password. No confirmation emails, no fuss.</p>
+              </section>
+              <section class="grid grid-cols-3 gap-4 pb-6">
+                <div class="card p-6"><div class="text-4xl">📝</div><h2 class="heading mt-3 text-xl">Log your dive</h2><p class="mt-2 text-sm leading-relaxed text-mist">Finished today's seven prompts? Type in your score (0–700) and it goes straight on the board.</p></div>
+                <div class="card p-6"><div class="text-4xl">🏆</div><h2 class="heading mt-3 text-xl">Climb the board</h2><p class="mt-2 text-sm leading-relaxed text-mist">Deepest single dive and biggest weekly total, with a fresh race every Monday.</p></div>
+                <div class="card p-6"><div class="text-4xl">🔥</div><h2 class="heading mt-3 text-xl">Keep the streak</h2><p class="mt-2 text-sm leading-relaxed text-mist">Play every day and watch the flames stack up. Miss one and it's back to dry land.</p></div>
+              </section>
+            </main>
+          </div>
+
+          <!-- ---------- Sign-up page (src/app/signup + AuthShell + AuthForm) ---------- -->
+          <div class="page" id="pg-signup">
+            <main class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-8">
+              <div class="mb-6 flex justify-center">
+                <a class="group inline-flex items-center gap-2"><span class="wig inline-block text-2xl">🦐</span><span class="heading text-lg">Krillion Score Board</span></a>
+              </div>
+              <div class="card p-8" id="signup-card">
+                <h1 class="heading text-3xl">Join the shoal</h1>
+                <p class="mt-1 mb-6 text-sm text-mist">Email, password, a name. That's it. No confirmation email.</p>
+                <div class="space-y-4">
+                  <div>
+                    <label class="label">Name</label>
+                    <div class="input fake" id="f-name" data-ph="Anna Andersson"></div>
+                    <p class="mt-1 text-xs text-mist">Only shown when someone hovers over your nick.</p>
+                  </div>
+                  <div>
+                    <label class="label">Nick name</label>
+                    <div class="input fake" id="f-nick" data-ph="Captain Taleggio"></div>
+                  </div>
+                  <div>
+                    <label class="label">Email</label>
+                    <div class="input fake" id="f-email" data-ph="you@example.com"></div>
+                  </div>
+                  <div>
+                    <label class="label">Password</label>
+                    <div class="input fake" id="f-pass" data-ph="At least 8 characters"></div>
+                  </div>
+                  <button class="btn-primary w-full text-lg" id="btn-signup">Dive in 🦐</button>
+                  <p class="text-center text-sm text-mist">Already have an account? <span class="text-aqua">Log in</span></p>
+                </div>
+              </div>
+            </main>
+          </div>
+
+          <!-- ---------- Dashboard (src/app/(app)/dashboard) ---------- -->
+          <div class="page" id="pg-dash">
+            <header class="app border-b border-white/10 bg-deep/70 backdrop-blur-md">
+              <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-3">
+                <a class="group inline-flex items-center gap-2"><span class="wig inline-block text-2xl">🦐</span><span class="heading text-lg">Krillion Score Board</span></a>
+                <nav class="flex items-center gap-2">
+                  <a class="btn-aqua btn-sm" id="nav-play">Play Krillion ↗</a>
+                  <a class="btn-ghost btn-sm">Dashboard</a>
+                  <span class="chip inline-flex items-center gap-2"><span data-avatar="@nick" data-size="sm"></span><span data-bind="nick"></span></span>
+                  <span class="btn-ghost btn-sm">Sign out</span>
+                </nav>
+              </div>
+            </header>
+            <div id="reminder" class="border-b border-sun/30 bg-sun/10">
+              <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-2 text-sm">
+                <p><span>🤿</span> You haven't dived today. Play, then log your score before the UTC reset to keep your streak.</p>
+                <span class="flex flex-wrap items-center gap-2">
+                  <a class="btn-primary btn-sm">Play today's Krillion ↗</a>
+                  <a class="btn-ghost btn-sm">Log a score</a>
+                </span>
+              </div>
+            </div>
+            <main class="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+              <div class="space-y-6">
+                <div>
+                  <p class="eyebrow" data-bind="todayLong"></p>
+                  <h1 class="heading mt-1 text-5xl">Ahoy, <span data-bind="nick"></span> <span id="d-wave">👋</span></h1>
+                  <p class="mt-2 text-mist" id="d-sub-before">You haven't logged today's dive yet. <span class="text-aqua">Play today's Krillion ↗</span> and log the score below. Don't let the streak dry out.</p>
+                  <p class="mt-2 text-mist" id="d-sub-after" style="display:none">Today's dive is in the log. Go taunt your friends.</p>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4">
+                  <div class="card bg-gradient-to-br from-krill/20 to-transparent p-5">
+                    <p class="eyebrow">Current streak</p>
+                    <p class="heading mt-2 text-4xl"><span id="st-streak">0</span> <span class="text-2xl">🫧</span></p>
+                    <p class="mt-1 text-xs text-mist" id="st-streak-hint">Dry land · best ever 0</p>
+                  </div>
+                  <div class="card bg-gradient-to-br from-aqua/20 to-transparent p-5">
+                    <p class="eyebrow">This week</p>
+                    <p class="heading mt-2 text-4xl" id="st-week">0</p>
+                    <p class="mt-1 text-xs text-mist" id="st-week-hint">0 dives · 0 m</p>
+                  </div>
+                  <div class="card bg-gradient-to-br from-sun/20 to-transparent p-5">
+                    <p class="eyebrow">Best this week</p>
+                    <p class="heading mt-2 text-4xl" id="st-best">0</p>
+                    <p class="mt-1 text-xs text-mist" id="st-best-hint">No dives yet</p>
+                  </div>
+                  <div class="card bg-gradient-to-br from-aqua/20 to-transparent p-5">
+                    <p class="eyebrow">All-time best</p>
+                    <p class="heading mt-2 text-4xl" id="st-all">0</p>
+                    <p class="mt-1 text-xs text-mist" id="st-all-hint">0 dives logged</p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-[3fr_2fr] gap-6">
+                  <div class="space-y-6">
+                    <section class="card p-6" id="sec-log">
+                      <div class="mb-4">
+                        <h2 class="heading flex items-center gap-2 text-2xl"><span>📝</span>Log a dive</h2>
+                        <p class="mt-0.5 text-sm text-mist">One score per day. Logging the same day again overwrites it.</p>
+                      </div>
+                      <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                          <div>
+                            <label class="label">Dive day (UTC)</label>
+                            <div class="input fake justify-between"><span data-bind="today"></span><span class="text-mist">📅</span></div>
+                          </div>
+                          <div>
+                            <label class="label">Score (0–700)</label>
+                            <div class="input fake font-display text-2xl font-bold" id="f-score" data-ph="e.g. 455"></div>
+                          </div>
+                        </div>
+                        <div>
+                          <label class="label">Brag line <span class="font-normal text-mist/60">(optional)</span></label>
+                          <div class="input fake" id="f-note" data-ph="Got the One in a Krillion on cheeses 🧀"></div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                          <p class="text-sm text-mist" id="log-preview">Type your score to see how deep you went.</p>
+                          <button class="btn-primary" id="btn-log">Log dive 🌊</button>
+                        </div>
+                        <p id="log-flash" class="rounded-2xl border border-aqua/40 bg-aqua/10 px-4 py-3 text-sm text-aqua" style="display:none"></p>
+                      </div>
+                    </section>
+
+                    <section class="card p-6">
+                      <div class="mb-4"><h2 class="heading flex items-center gap-2 text-2xl"><span>🗓️</span>Recent dives</h2></div>
+                      <div id="recent-empty" class="rounded-2xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-mist"><div class="mb-2 text-3xl">🫧</div>No dives yet. Play Krillion, then come back and log your score.</div>
+                      <ul id="recent-list" class="space-y-3" style="display:none">
+                        <li class="flex items-center gap-3">
+                          <div class="w-24 shrink-0 text-sm text-mist" data-bind="todayShort"></div>
+                          <div class="flex-1">
+                            <div class="flex items-baseline justify-between gap-2">
+                              <span class="font-display text-lg font-bold" data-bind="score"></span>
+                              <span class="truncate text-xs text-mist italic">“<span data-bind="note"></span>”</span>
+                            </div>
+                            <div class="h-2.5 w-full overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-gradient-to-r from-aqua to-aqua-deep" id="recent-bar"></div></div>
+                          </div>
+                          <span class="btn-ghost btn-sm">✕</span>
+                        </li>
+                      </ul>
+                    </section>
+                  </div>
+
+                  <div id="col-right">
+                    <section class="card p-6" id="sec-your">
+                      <div class="mb-4">
+                        <h2 class="heading flex items-center gap-2 text-2xl"><span>🏆</span>Your boards</h2>
+                        <p class="mt-0.5 text-sm text-mist">Boards you're on.</p>
+                      </div>
+                      <div id="your-empty" class="rounded-2xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-mist"><div class="mb-2 text-3xl">🐚</div>You're not on a board yet. Pick one below and ask to join.</div>
+                      <a id="your-evo" class="card-solid flex items-center gap-4 p-4" style="display:none">
+                        <span class="text-4xl" data-bind="emoji"></span>
+                        <span class="min-w-0"><span class="heading block truncate text-lg" data-bind="board"></span></span>
+                        <span class="ml-auto text-mist">→</span>
+                      </a>
+                    </section>
+
+                    <div id="wrap-other" class="mt-6">
+                      <section class="card p-6" id="sec-other">
+                        <div class="mb-4">
+                          <h2 class="heading flex items-center gap-2 text-2xl"><span>🙋</span>Other boards</h2>
+                          <p class="mt-0.5 text-sm text-mist">Ask to join. An admin approves, then the board shows up above.</p>
+                        </div>
+                        <div class="card-solid flex items-center gap-4 p-4">
+                          <span class="text-4xl" data-bind="emoji"></span>
+                          <span class="min-w-0 flex-1">
+                            <span class="heading block truncate text-lg" data-bind="board"></span>
+                            <span class="block truncate text-sm text-mist"><span data-bind="divers"></span> divers</span>
+                          </span>
+                          <span class="btn-aqua btn-sm" id="btn-request">Request to join</span>
+                          <span class="flex items-center gap-2" id="req-state" style="display:none">
+                            <span class="chip border-sun/40 text-sun">⏳ requested</span>
+                            <span class="btn-ghost btn-sm">Cancel</span>
+                          </span>
+                        </div>
+                      </section>
+                    </div>
+
+                    <section class="card mt-6 p-6">
+                      <div class="mb-4"><h2 class="heading flex items-center gap-2 text-2xl"><span>🤿</span>How scoring works</h2></div>
+                      <ul class="space-y-2 text-sm text-mist">
+                        <li>Krillion gives you 7 prompts a day. Rare answers pay more, up to 100 each.</li>
+                        <li>So a perfect day is 700 points. Log your total here.</li>
+                        <li>Every point is 10 metres of depth. 700 points is 7,000 m down.</li>
+                        <li>Streaks count consecutive UTC days with a logged dive.</li>
+                      </ul>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <footer class="py-6 text-center text-xs text-mist/60">Game days follow UTC, just like Krillion's daily reset. 1 point = 10 metres of depth.</footer>
+          </div>
+
+          <!-- ---------- Board page (src/app/(app)/boards/[id]) ---------- -->
+          <div class="page" id="pg-board">
+            <header class="app border-b border-white/10 bg-deep/70 backdrop-blur-md">
+              <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-3">
+                <a class="group inline-flex items-center gap-2"><span class="wig inline-block text-2xl">🦐</span><span class="heading text-lg">Krillion Score Board</span></a>
+                <nav class="flex items-center gap-2">
+                  <a class="btn-aqua btn-sm">Play Krillion ↗</a>
+                  <a class="btn-ghost btn-sm">Dashboard</a>
+                  <span class="chip inline-flex items-center gap-2"><span data-avatar="@nick" data-size="sm"></span><span data-bind="nick"></span></span>
+                  <span class="btn-ghost btn-sm">Sign out</span>
+                </nav>
+              </div>
+            </header>
+            <main class="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
+              <div class="space-y-6">
+                <div class="flex flex-row items-start justify-between gap-4">
+                  <div class="flex items-center gap-4">
+                    <span class="float text-6xl" data-bind="emoji"></span>
+                    <div>
+                      <p class="eyebrow">Score board · <span id="b-count"></span> divers</p>
+                      <h1 class="heading text-5xl" data-bind="board"></h1>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="btn-ghost btn-sm">←</span>
+                    <span class="chip text-sm" data-bind="weekLabel"></span>
+                    <span class="btn-ghost btn-sm pointer-events-none opacity-40">→</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4" id="b-stats"></div>
+
+                <section class="card p-6" id="b-today">
+                  <div class="mb-4">
+                    <h2 class="heading flex items-center gap-2 text-2xl"><span>🌊</span>Today's podium</h2>
+                    <p class="mt-0.5 text-sm text-mist" id="b-today-sub"></p>
+                  </div>
+                  <div class="grid grid-cols-3 items-end gap-3" id="b-today-podium"></div>
+                </section>
+
+                <section class="card p-6" id="b-week">
+                  <div class="mb-4">
+                    <h2 class="heading flex items-center gap-2 text-2xl"><span>🏆</span>Weekly podium</h2>
+                    <p class="mt-0.5 text-sm text-mist">Biggest total score this week.</p>
+                  </div>
+                  <div class="grid grid-cols-3 items-end gap-3" id="b-week-podium"></div>
+                  <div class="mt-5 border-t border-white/10 pt-4">
+                    <p class="eyebrow mb-3">The rest of the board</p>
+                    <ol class="space-y-3" id="b-rest"></ol>
+                  </div>
+                </section>
+
+                <section class="card p-6" id="b-streak">
+                  <div class="mb-4">
+                    <h2 class="heading flex items-center gap-2 text-2xl"><span>🔥</span>Hot streakers</h2>
+                    <p class="mt-0.5 text-sm text-mist">Consecutive days with a logged dive. Today still counts until midnight UTC.</p>
+                  </div>
+                  <ol class="space-y-2" id="b-streaks"></ol>
+                </section>
+              </div>
+            </main>
+          </div>
+        </div>
+
+        <!-- "Time skip" annotation while the admin approves -->
+        <div id="skip" class="absolute inset-0 flex items-center justify-center" style="background: rgb(4 15 31 / 0.6)">
+          <div class="card-solid px-12 py-8 text-center">
+            <div class="text-6xl" id="skip-emoji">⏳</div>
+            <p class="heading mt-3 text-4xl" id="skip-title">A little later…</p>
+            <p class="mt-2 text-lg text-mist" id="skip-sub">An admin looks at your request</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PLAY KRILLION ============================== -->
+  <section id="play" class="layer">
+    <div class="absolute left-[80px] top-[150px] w-[790px]">
+      <p class="eyebrow text-[20px]" id="p-eyebrow">Step 2 · Play</p>
+      <h2 class="heading mt-3 text-[70px] leading-[1.02]" id="p-title">Play today's Krillion</h2>
+      <p class="mt-4 text-[27px] text-mist" id="p-sub">Free, right in your browser at <b class="text-aqua">krillion.io</b></p>
+      <ul class="mt-9 space-y-4">
+        <li class="p-rule card flex items-center gap-5 px-6 py-4 text-[24px] leading-snug"><span class="text-[34px]">🗓️</span><span><b>7 prompts</b> a day, the same ones for everyone.</span></li>
+        <li class="p-rule card flex items-center gap-5 px-6 py-4 text-[24px] leading-snug"><span class="text-[34px]">🧠</span><span>The obvious answer loses. <b>Rarer answers pay more</b>, up to 100 points each.</span></li>
+        <li class="p-rule card flex items-center gap-5 px-6 py-4 text-[24px] leading-snug"><span class="text-[34px]">⏱️</span><span>Beat the clock. A wrong guess only costs you a little time.</span></li>
+        <li class="p-rule card flex items-center gap-5 px-6 py-4 text-[24px] leading-snug"><span class="text-[34px]">🌊</span><span><b>1 point = 10 m</b> deep. A perfect 700 is 7,000 m down.</span></li>
+        <li class="p-rule card flex items-center gap-5 px-6 py-4 text-[24px] leading-snug"><span class="text-[34px]">🕛</span><span>Fresh prompts every day at <b>midnight UTC</b>.</span></li>
+      </ul>
+    </div>
+
+    <div class="absolute left-[960px] top-[150px] w-[880px]">
+      <div id="p-card" class="card p-8">
+        <div class="flex items-center justify-between">
+          <p class="eyebrow text-[18px]">Example prompt</p>
+          <span class="chip text-[15px]">illustration</span>
+        </div>
+        <h3 class="heading mt-2 text-[56px]">Name a cheese 🧀</h3>
+        <div class="mt-5 space-y-5">
+          <div id="p-row-a">
+            <p class="label text-[17px]">The obvious answer</p>
+            <div class="flex items-center gap-4">
+              <div class="input fake flex-1 text-[26px]" id="p-in-a"></div>
+              <span id="p-pts-a" class="w-[120px] shrink-0 rounded-2xl border border-white/15 bg-white/10 py-2 text-center font-display text-[30px] font-bold text-mist">+10</span>
+            </div>
+            <p class="mt-2 text-[19px] text-mist" id="p-cap-a">Everyone thinks of it. 😴</p>
+          </div>
+          <div id="p-row-b">
+            <p class="label text-[17px]">A rarer answer</p>
+            <div class="flex items-center gap-4">
+              <div class="input fake flex-1 text-[26px]" id="p-in-b"></div>
+              <span id="p-pts-b" class="w-[120px] shrink-0 rounded-2xl bg-gradient-to-r from-sun to-krill-light py-2 text-center font-display text-[30px] font-bold text-abyss shadow-krill">+85</span>
+            </div>
+            <p class="mt-2 text-[19px] text-mist" id="p-cap-b">Far fewer divers find it. Deep points! 🔥</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="p-depth" class="card mt-6 flex items-center gap-8 p-7">
+        <div class="flex-1">
+          <p class="eyebrow text-[18px]">Your dive today</p>
+          <p class="heading mt-2 text-[80px] leading-none"><span id="p-score">0</span> <span class="text-[30px] text-mist">points</span></p>
+          <p class="mt-3 font-display text-[30px] font-bold text-aqua"><span id="p-metres">0 m</span> deep</p>
+          <p id="p-remember" class="mt-4 text-[21px] text-foam">📝 Note your total. You'll log it next.</p>
+        </div>
+        <div class="relative h-[250px] w-[190px] shrink-0">
+          <div class="absolute top-0 left-[20px] h-full w-[30px] rounded-full border border-white/15 bg-gradient-to-b from-aqua/30 via-shelf/50 to-abyss"></div>
+          <div id="p-fill" class="absolute top-0 left-[20px] w-[30px] rounded-full bg-gradient-to-b from-aqua to-aqua-deep"></div>
+          <div id="p-diver" class="absolute left-[11px] text-[40px] leading-none">🤿</div>
+          <span class="absolute top-[-6px] left-[64px] text-[17px] font-semibold text-mist">0 m</span>
+          <span class="absolute top-[113px] left-[64px] text-[17px] font-semibold text-mist">3,500 m</span>
+          <span class="absolute bottom-[-6px] left-[64px] text-[17px] font-semibold text-mist">7,000 m</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== OUTRO ============================== -->
+  <section id="outro" class="layer flex flex-col items-center justify-center text-center">
+    <div id="o-shrimp" class="text-[140px] leading-none drop-shadow-[0_0_40px_rgba(62,230,199,0.45)]">🦐</div>
+    <h2 id="o-title" class="heading mt-6 text-[100px] leading-none">See you in the <span class="text-aqua">deep</span>!</h2>
+    <div class="mt-14 grid w-[1560px] grid-cols-3 gap-6 text-left">
+      <div class="o-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">1</span><h3 class="heading text-[36px]">Join</h3></div>
+        <p class="mt-3 text-[23px] leading-snug text-mist"><b class="text-foam" data-bind="site"></b>, then request to join <b class="text-foam"><span data-bind="emoji"></span> <span data-bind="board"></span></b>.</p>
+      </div>
+      <div class="o-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">2</span><h3 class="heading text-[36px]">Play</h3></div>
+        <p class="mt-3 text-[23px] leading-snug text-mist"><b class="text-foam">krillion.io</b>: 7 prompts a day. Go for the rare answers.</p>
+      </div>
+      <div class="o-card card p-7">
+        <div class="flex items-center gap-4"><span class="step-num">3</span><h3 class="heading text-[36px]">Log</h3></div>
+        <p class="mt-3 text-[23px] leading-snug text-mist">Your score on your dashboard, every day before the UTC reset.</p>
+      </div>
+    </div>
+    <p id="o-foot" class="mt-14 text-[19px] text-mist/70">A fan-made score board. Not affiliated with Krillion.</p>
+  </section>
+
+  <!-- Step progress -->
+  <div id="steps">
+    <span class="pill" data-step="1"><span class="n">1</span>Join</span>
+    <span class="pill-line"></span>
+    <span class="pill" data-step="2"><span class="n">2</span>Play</span>
+    <span class="pill-line"></span>
+    <span class="pill" data-step="3"><span class="n">3</span>Log</span>
+  </div>
+
+  <div id="ripple"></div>
+  <svg id="cursor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2 L3 19.5 L7.6 15.4 L10.6 22 L13.6 20.7 L10.7 14.2 L17 14.2 Z" fill="#fff" stroke="#040f1f" stroke-width="1.4" stroke-linejoin="round"/></svg>
+  <div id="fade"></div>
+</div>
+
+<script>
+/*
+ * Everything on screen is a pure function of the time t (seconds), so the
+ * renderer can step through it frame by frame: window.render(t).
+ * Edit CONFIG to change the board, the example diver or the site address.
+ */
+const CONFIG = {
+  board: "Evolution",
+  emoji: "🐠",
+  divers: 7, // members before you join
+  site: "krillionscore.click",
+  name: "Sam Seaborg",
+  nick: "Sam the Shrimp",
+  email: "sam@example.com",
+  score: 455,
+  note: "Taleggio for the win 🧀",
+  today: "2026-10-09",
+  todayLong: "Fri 9 Oct 2026",
+  todayShort: "Fri 9 Oct",
+  weekLabel: "Week 41 · 5 – 11 Oct 2026",
+};
+const FPS = 30;
+const DURATION = 100;
+const VW = 1140, VH = 848; // browser viewport
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, d) => (d <= 0 ? (t >= a ? 1 : 0) : clamp((t - a) / d));
+const E = {
+  out: (p) => 1 - Math.pow(1 - p, 3),
+  inOut: (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2),
+  back: (p) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); },
+};
+const fmtInt = (n) => Math.round(n).toLocaleString("en-GB");
+const metres = (score) => `${fmtInt(score * 10)} m`;
+function verdict(score) {
+  if (score >= 700) return "One in a Krillion!";
+  if (score >= 600) return "Abyssal";
+  if (score >= 500) return "Deep diver";
+  if (score >= 400) return "Nice depth";
+  if (score >= 300) return "Getting wet";
+  if (score >= 150) return "Paddling";
+  return "Snorkelling";
+}
+/** Fade + rise in at `a`, optionally out at `b`. */
+function appear(el, t, a, b = Infinity, o = {}) {
+  const d = o.d ?? 0.55, dy = o.dy ?? 26, outD = o.outD ?? 0.45;
+  const pin = prog(t, a, d);
+  const pout = b === Infinity ? 0 : E.inOut(prog(t, b, outD));
+  const op = E.out(pin) * (1 - pout);
+  const s = o.pop ? lerp(o.pop, 1, E.back(pin)) : 1;
+  el.style.opacity = op;
+  el.style.visibility = op <= 0.001 ? "hidden" : "visible";
+  el.style.transform = `translate(${o.dx ? (1 - E.out(pin)) * o.dx : 0}px, ${(1 - E.out(pin)) * dy - pout * (o.outDy ?? 14)}px) scale(${s})`;
+  return op;
+}
+function windowOpacity(t, a, b, fin = 0.6, fout = 0.6) {
+  return Math.min(E.inOut(prog(t, a, fin)), 1 - E.inOut(prog(t, b - fout, fout)));
+}
+function rng(seed) { // mulberry32
+  return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+}
+const show = (el, on) => { el.style.display = on ? "" : "none"; };
+
+/* ---------- static content ---------- */
+$$("[data-bind]").forEach((el) => { el.textContent = CONFIG[el.dataset.bind]; });
+
+// Same avatar colours and hash as src/components/ui.tsx
+const AVATAR_COLORS = ["from-krill to-krill-light", "from-aqua to-aqua-deep", "from-sun to-bronze", "from-shelf to-aqua", "from-krill-light to-sun", "from-aqua-deep to-shelf"];
+const AVATAR_SIZES = { sm: "h-6 w-6 text-[10px]", md: "h-9 w-9 text-sm", lg: "h-14 w-14 text-xl" };
+function hash(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+function avatar(name, size = "md") {
+  return `<span class="inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-display font-bold text-abyss ${AVATAR_COLORS[hash(name) % AVATAR_COLORS.length]} ${AVATAR_SIZES[size]}">${name.trim().slice(0, 1).toUpperCase()}</span>`;
+}
+
+// Example board data (fictional divers). You are CONFIG.nick.
+const me = CONFIG.nick;
+const STATS = [
+  { label: "Active divers", value: `${CONFIG.divers + 1}/${CONFIG.divers + 1}`, hint: "logged at least one dive this week", ring: "from-aqua/20" },
+  { label: "Dives this week", value: "27", hint: "426 avg per dive", ring: "from-sun/20" },
+  { label: "Combined depth", value: "115,150 m", hint: "11515 points together", ring: "from-aqua/20" },
+  { label: "Hottest streak", value: "23 🔥", hint: "Deep Dora", ring: "from-krill/20" },
+];
+const PODIUM_STYLES = [
+  "from-sun/30 to-sun/5 border-sun/40 shadow-[0_0_40px_-10px_rgba(255,209,102,0.5)] py-8",
+  "from-silver/25 to-silver/5 border-silver/30 py-6",
+  "from-bronze/25 to-bronze/5 border-bronze/30",
+];
+const TODAY = [
+  { nick: "Deep Dora", value: 512, detail: `5,120 m<span class="block truncate italic">“Kelp yeah 🌿”</span>` },
+  { nick: me, value: CONFIG.score, detail: `${metres(CONFIG.score)}<span class="block truncate italic">“${CONFIG.note}”</span>` },
+  { nick: "Plankton Pete", value: 390, detail: "3,900 m" },
+];
+const WEEK = [
+  { nick: "Deep Dora", value: 2410, detail: "5 dives · avg 482 · 24,100 m" },
+  { nick: "Krill Bill", value: 1980, detail: "4 dives · avg 495 · 19,800 m" },
+  { nick: "Plankton Pete", value: 1955, detail: "5 dives · avg 391 · 19,550 m" },
+];
+const REST = [
+  ["Coral Carla", 1610, "4 dives · avg 403 · best 488"],
+  ["Barnacle Bo", 1240, "3 dives · avg 413 · best 455"],
+  ["Nemo Nils", 1105, "3 dives · avg 368 · best 402"],
+  ["Anchor Anna", 760, "2 dives · avg 380 · best 410"],
+  [me, CONFIG.score, `1 dive · avg ${CONFIG.score} · best ${CONFIG.score}`],
+];
+const STREAKS = [
+  ["Deep Dora", 23, "🔥🔥🔥", "Deep-sea regular · longest ever 31 · dived today ✅", true],
+  ["Plankton Pete", 12, "🔥🔥", "On fire · longest ever 12 · dived today ✅", false],
+  ["Krill Bill", 6, "🔥", "Warming up · longest ever 9 · not yet today ⏳", false],
+  [me, 1, "", "Dipped a toe · longest ever 1 · dived today ✅", false],
+];
+const medal = (rank) => ["🥇", "🥈", "🥉"][rank] ?? `#${rank + 1}`;
+function podiumCards(entries) {
+  const order = [entries[1], entries[0], entries[2]];
+  return order.map((e) => {
+    const rank = entries.indexOf(e);
+    return `<div class="rounded-3xl border bg-gradient-to-b p-5 text-center ${PODIUM_STYLES[rank]}">
+      <div class="text-4xl">${medal(rank)}</div>
+      <div class="mt-2 flex justify-center">${avatar(e.nick, "lg")}</div>
+      <div class="heading mt-2 truncate text-xl">${e.nick}</div>
+      <div class="heading mt-1 text-4xl">${e.value}</div>
+      <div class="text-xs text-mist">${e.detail}</div></div>`;
+  }).join("");
+}
+$("#b-count").textContent = CONFIG.divers + 1;
+$("#b-stats").innerHTML = STATS.map((s) => `<div class="card bg-gradient-to-br ${s.ring} to-transparent p-5"><p class="eyebrow">${s.label}</p><p class="heading mt-2 text-4xl">${s.value}</p><p class="mt-1 text-xs text-mist">${s.hint}</p></div>`).join("");
+$("#b-today-sub").textContent = `${CONFIG.todayLong} · best dives logged today, UTC. 3 of ${CONFIG.divers + 1} divers down so far.`;
+$("#b-today-podium").innerHTML = podiumCards(TODAY);
+$("#b-week-podium").innerHTML = podiumCards(WEEK);
+$("#b-rest").innerHTML = REST.map(([nick, total, line], i) => `<li class="flex items-center gap-3">
+  <span class="w-8 shrink-0 text-center font-display text-lg font-bold text-mist">${medal(i + 3)}</span>${avatar(nick)}
+  <div class="min-w-0 flex-1"><div class="flex items-baseline justify-between gap-2"><span class="truncate font-display font-semibold">${nick}</span><span class="font-display text-lg font-bold">${total}</span></div>
+  <div class="h-2.5 w-full overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-gradient-to-r from-aqua to-aqua-deep" style="width:${(total / 2410) * 100}%"></div></div>
+  <div class="mt-1 text-xs text-mist">${line}</div></div></li>`).join("");
+$("#b-streaks").innerHTML = STREAKS.map(([nick, n, flames, line, hot]) => `<li class="flex items-center gap-3 rounded-2xl px-3 py-2 ${hot ? "border border-krill/40 bg-krill/10" : "bg-white/5"}">
+  ${avatar(nick)}<div class="min-w-0 flex-1"><div class="truncate font-display font-semibold">${nick}</div><div class="text-xs text-mist">${line}</div></div>
+  <div class="text-right"><div class="heading text-2xl">${n}</div><div class="text-sm leading-none">${flames}</div></div></li>`).join("");
+$$("[data-avatar]").forEach((el) => {
+  const raw = el.dataset.avatar;
+  el.outerHTML = avatar(raw.startsWith("@") ? CONFIG[raw.slice(1)] : raw, el.dataset.size || "md");
+});
+$("#recent-bar").style.width = `${(CONFIG.score / 700) * 100}%`;
+
+// Bubbles
+const BUBBLES = (() => {
+  const r = rng(7);
+  return Array.from({ length: 26 }, () => ({ left: r() * 100, size: 7 + r() * 22, delay: r() * 20, dur: 13 + r() * 9 }));
+})();
+$("#bubbles").innerHTML = BUBBLES.map((b) => `<span class="bubble" style="left:${b.left}%;width:${b.size}px;height:${b.size}px"></span>`).join("");
+const bubbleEls = $$("#bubbles .bubble");
+
+/* ---------- timeline ---------- */
+const SCENES = {
+  intro: [0, 10.4],
+  app: [[10.2, 41.3], [63.3, 91.9]],
+  play: [41.0, 63.8],
+  outro: [91.5, 100],
+};
+const STEP_TIMES = [[10.6, 41.0, 1], [41.0, 63.4, 2], [63.4, 91.9, 3]];
+
+const PAGES = [
+  [0, "landing", ""],
+  [14.25, "signup", "/signup"],
+  [23.45, "dash", "/dashboard"],
+  [78.85, "board", "/boards/3f9c2a…"],
+];
+
+const CAPS = [
+  { sel: "#cap-1a", a: 10.7, b: 23.9, bullets: [11.2, 15.0, 22.2], tip: 22.9 },
+  { sel: "#cap-1b", a: 24.2, b: 40.7, bullets: [24.7, 26.4, 27.9, 33.5, 38.0] },
+  { sel: "#cap-3", a: 63.8, b: 78.7, bullets: [64.2, 65.9, 68.7, 72.2, 75.6] },
+  { sel: "#cap-4", a: 79.0, b: 91.3, bullets: [79.3, 80.7, 83.9, 87.3] },
+];
+
+// Camera inside the browser: zoom/pan to an element (dur 0 = cut).
+const CAM = [
+  { t: 14.25, dur: 0 },
+  { t: 14.5, dur: 0.9, focus: "#signup-card", s: 1.24 },
+  { t: 23.45, dur: 0 },
+  { t: 25.0, dur: 1.3, focus: "#col-right", s: 1.42, top: 36 },
+  { t: 37.4, dur: 1.0 },
+  { t: 63.3, dur: 0 },
+  { t: 64.6, dur: 1.2, focus: "#sec-log", s: 1.45 },
+  { t: 75.0, dur: 1.2 },
+  { t: 78.85, dur: 0 },
+  { t: 80.6, dur: 1.2, focus: "#b-today", s: 1 },
+  { t: 83.8, dur: 1.6, focus: "#b-week", s: 1 },
+  { t: 87.3, dur: 1.6, focus: "#b-streak", s: 1 },
+];
+
+// Mouse pointer: arrives at `at` by time t, after moving for `dur` seconds.
+const CURSOR = [
+  { t: 11.2, at: [1660, 990] },
+  { t: 13.6, dur: 1.5, at: "#land-join" },
+  { t: 15.55, dur: 0.9, at: "#f-name", fx: 0.3 },
+  { t: 17.35, dur: 0.6, at: "#f-nick", fx: 0.3 },
+  { t: 19.15, dur: 0.6, at: "#f-email", fx: 0.3 },
+  { t: 20.85, dur: 0.6, at: "#f-pass", fx: 0.3 },
+  { t: 22.55, dur: 0.7, at: "#btn-signup" },
+  { t: 27.2, dur: 1.4, at: "#btn-request" },
+  { t: 31.2, dur: 0.9, at: "#btn-request", dx: 150, dy: 120 },
+  { t: 35.4, dur: 1.0, at: "#your-evo", fx: 0.62 },
+  { t: 39.4, dur: 1.2, at: "#nav-play" },
+  { t: 63.9, dur: 0, at: [1660, 990] },
+  { t: 66.1, dur: 1.0, at: "#f-score", fx: 0.3 },
+  { t: 68.8, dur: 0.8, at: "#f-note", fx: 0.3 },
+  { t: 72.4, dur: 0.9, at: "#btn-log" },
+  { t: 74.4, dur: 0.8, at: "#btn-log", dx: 90, dy: 130 },
+  { t: 78.2, dur: 1.2, at: "#your-evo", fx: 0.5 },
+  { t: 79.6, dur: 0.8, at: "#your-evo", dx: 260, dy: 320 },
+];
+const CURSOR_VIS = [[11.0, 41.0], [63.9, 80.2]];
+const CLICKS = [
+  { t: 13.85, press: "#land-join" },
+  { t: 15.7 }, { t: 17.5 }, { t: 19.3 }, { t: 21.0 },
+  { t: 22.75, press: "#btn-signup" },
+  { t: 27.5, press: "#btn-request" },
+  { t: 39.75, press: "#nav-play" },
+  { t: 66.3 }, { t: 68.95 },
+  { t: 72.6, press: "#btn-log" },
+  { t: 78.5, press: "#your-evo" },
+];
+const FIELDS = [
+  { sel: "#f-name", text: CONFIG.name, focus: [15.7, 17.5], start: 15.85, cps: 11 },
+  { sel: "#f-nick", text: CONFIG.nick, focus: [17.5, 19.3], start: 17.65, cps: 12 },
+  { sel: "#f-email", text: CONFIG.email, focus: [19.3, 21.0], start: 19.45, cps: 13 },
+  { sel: "#f-pass", text: "••••••••••", focus: [21.0, 22.75], start: 21.15, cps: 14 },
+  { sel: "#f-score", text: String(CONFIG.score), focus: [66.3, 68.95], start: 66.5, cps: 5 },
+  { sel: "#f-note", text: CONFIG.note, focus: [68.95, 72.6], start: 69.1, cps: 13 },
+  { sel: "#p-in-a", text: "cheddar", focus: [46.3, 47.6], start: 46.5, cps: 9 },
+  { sel: "#p-in-b", text: "taleggio", focus: [49.3, 50.7], start: 49.5, cps: 9 },
+];
+const K = { // key moments
+  signupSubmit: 22.75, requested: 27.55, skip: [31.9, 34.5], approved: 33.2,
+  logSubmit: 72.6, logSaved: 73.35, countUp: 75.3,
+  play: { title: 41.4, rules: [42.6, 45.2, 51.4, 54.4, 58.6], card: 42.2, rowA: 46.0, ptsA: 47.6, rowB: 49.0, ptsB: 50.7, depth: 54.6, count: [55.2, 3.0], remember: 59.6 },
+};
+
+/* ---------- audio cue sheet (read by render.mjs, voiced by soundtrack.py) ---------- */
+window.AUDIO_EVENTS = (() => {
+  const ev = [];
+  CLICKS.forEach((c) => ev.push({ t: c.t, type: "click" }));
+  FIELDS.forEach((f) => Array.from(f.text).forEach((_, i) => ev.push({ t: f.start + i / f.cps, type: "key" })));
+  [K.approved + 0.1, K.logSaved + 0.05, K.play.ptsB].forEach((t) => ev.push({ t, type: "chime" }));
+  [K.play.ptsA].forEach((t) => ev.push({ t, type: "pop" }));
+  [10.2, 41.0, 63.3, 91.5].forEach((t) => ev.push({ t, type: "whoosh" }));
+  [0.3, 92.0].forEach((t) => ev.push({ t, type: "bloop" }));
+  return ev.sort((a, b) => a.t - b.t);
+})();
+
+/* ---------- renderers ---------- */
+function renderBubbles(t) {
+  BUBBLES.forEach((b, i) => {
+    const p = ((t + b.delay) % b.dur) / b.dur;
+    const op = p < 0.1 ? (p / 0.1) * 0.7 : p < 0.9 ? 0.7 - ((p - 0.1) / 0.8) * 0.2 : 0.5 * (1 - (p - 0.9) / 0.1);
+    const y = lerp(1080 * 1.1, -1080 * 0.1, p);
+    bubbleEls[i].style.transform = `translateY(${y - 1080}px) scale(${lerp(0.6, 1.1, p)})`;
+    bubbleEls[i].style.opacity = op;
+  });
+}
+function floatY(t, period = 7) { return -14 * (1 - Math.cos((2 * Math.PI * t) / period)) / 2; }
+function floatRot(t, period = 7) { return -3 + 6 * (1 - Math.cos((2 * Math.PI * t) / period)) / 2; }
+function renderDecor(t) {
+  $$(".float").forEach((el) => { el.style.transform = `translateY(${floatY(t)}px) rotate(${floatRot(t)}deg)`; });
+  $$(".wig").forEach((el) => { el.style.transform = `rotate(${-6 + 12 * (1 - Math.cos((2 * Math.PI * t) / 3)) / 2}deg)`; });
+}
+
+function renderIntro(t) {
+  const el = $("#intro");
+  const out = E.inOut(prog(t, SCENES.intro[1] - 0.8, 0.8));
+  el.style.opacity = 1 - out;
+  el.style.visibility = out >= 1 ? "hidden" : "visible";
+  el.style.transform = `translateY(${-40 * out}px)`;
+  if (out >= 1) return;
+  const sh = $("#i-shrimp");
+  const p = prog(t, 0.3, 0.8);
+  sh.style.opacity = E.out(p);
+  sh.style.transform = `translateY(${floatY(t)}px) rotate(${floatRot(t)}deg) scale(${lerp(0.3, 1, E.back(p))})`;
+  appear($("#i-eyebrow"), t, 0.9);
+  appear($("#i-title"), t, 1.3, Infinity, { dy: 50, d: 0.8 });
+  appear($("#i-sub"), t, 2.3);
+  $$(".i-card").forEach((c, i) => appear(c, t, 3.6 + i * 0.45, Infinity, { dy: 50, d: 0.7 }));
+}
+
+function renderSteps(t) {
+  const steps = $("#steps");
+  steps.style.opacity = windowOpacity(t, 10.6, 91.9, 0.6, 0.5);
+  const cur = STEP_TIMES.find(([a, b]) => t >= a && t < b)?.[2] ?? 0;
+  $$(".pill").forEach((p) => {
+    const n = Number(p.dataset.step);
+    p.classList.toggle("active", n === cur);
+    p.classList.toggle("done", n < cur);
+  });
+}
+
+function renderCaps(t) {
+  CAPS.forEach((c) => {
+    const el = $(c.sel);
+    if (appear(el, t, c.a, c.b, { dx: -40, dy: 0, d: 0.6, outDy: 0 }) <= 0) return;
+    const items = $$(`${c.sel} .b`);
+    const shown = c.bullets.filter((bt) => t >= bt).length;
+    items.forEach((li, i) => {
+      appear(li, t, c.bullets[i], Infinity, { dy: 18, d: 0.5 });
+      if (t >= c.bullets[i]) li.style.opacity = i === shown - 1 ? 1 : 0.6;
+      li.classList.toggle("on", i === shown - 1);
+    });
+    const tip = $(`${c.sel} .tip`);
+    if (tip) appear(tip, t, c.tip, Infinity, { dy: 18 });
+  });
+}
+
+function pageIndexAt(t) { let i = 0; PAGES.forEach(([pt], j) => { if (t >= pt) i = j; }); return i; }
+function renderPages(t) {
+  const idx = pageIndexAt(t);
+  PAGES.forEach(([pt, id], i) => {
+    const el = $(`#pg-${id}`);
+    const next = PAGES[i + 1]?.[0] ?? Infinity;
+    let o = 0;
+    if (i === idx) {
+      o = i === 0 ? 1 : E.out(prog(t, pt, 0.3));
+      o *= 1 - prog(t, next - 0.18, 0.18); // fade out just before navigating away
+    }
+    el.style.opacity = o;
+    el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+  });
+  $("#url-path").textContent = PAGES[idx][2];
+  // page-load bar
+  const nav = PAGES[idx][0];
+  const nextNav = PAGES[idx + 1]?.[0] ?? Infinity;
+  const lb = $("#loadbar");
+  let w = 0, lo = 0;
+  if (t >= nextNav - 0.25) { w = prog(t, nextNav - 0.25, 0.25) * 70; lo = 1; }
+  else if (idx > 0 && t < nav + 0.35) { w = lerp(70, 100, prog(t, nav, 0.2)); lo = 1 - prog(t, nav + 0.15, 0.2); }
+  lb.style.width = `${w}%`;
+  lb.style.opacity = lo;
+}
+
+function offsetIn(el, root) {
+  let x = 0, y = 0, n = el;
+  while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  return { x, y };
+}
+function camTarget(k) {
+  if (!k.focus) return { x: 0, y: 0, s: 1 };
+  const el = $(k.focus);
+  const page = el.closest(".page");
+  const o = offsetIn(el, page);
+  const s = k.s ?? 1.3;
+  const cx = o.x + el.offsetWidth * (k.fx ?? 0.5);
+  const cy = o.y + el.offsetHeight * (k.fy ?? 0.5);
+  let x = VW / 2 - cx * s;
+  let y = k.top !== undefined ? k.top - o.y * s : VH / 2 - cy * s;
+  const PH = Math.max(page.offsetHeight, VH);
+  x = clamp(x, VW - page.offsetWidth * s, 0);
+  y = clamp(y, VH - PH * s, 0);
+  return { x, y, s };
+}
+function renderCamera(t) {
+  let state = { x: 0, y: 0, s: 1 };
+  for (const k of CAM) {
+    if (t < k.t) break;
+    const target = camTarget(k);
+    const p = E.inOut(prog(t, k.t, k.dur));
+    state = { x: lerp(state.x, target.x, p), y: lerp(state.y, target.y, p), s: lerp(state.s, target.s, p) };
+  }
+  $("#cam").style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.s})`;
+}
+
+const pressScale = (t, at) => 1 - 0.07 * Math.sin(Math.PI * prog(t, at, 0.22));
+function renderFields(t) {
+  FIELDS.forEach((f) => {
+    const el = $(f.sel);
+    const chars = Array.from(f.text);
+    const n = Math.floor(clamp((t - f.start) * f.cps, 0, chars.length));
+    const value = chars.slice(0, n).join("");
+    const focused = t >= f.focus[0] && t < f.focus[1];
+    const typing = t >= f.start && t < f.start + chars.length / f.cps + 0.4;
+    const caretOn = focused && (typing || Math.floor(t * 2.2) % 2 === 0);
+    const ph = el.dataset.ph;
+    el.innerHTML = (value ? `<span>${value}</span>` : "") + (caretOn ? '<span class="caret"></span>' : "") + (!value && ph ? `<span class="ph">${ph}</span>` : "");
+    el.style.borderColor = focused ? "rgb(62 230 199 / 0.7)" : "";
+    el.style.boxShadow = focused ? "0 0 0 3px rgb(62 230 199 / 0.3)" : "";
+  });
+}
+function typedValue(sel, t) {
+  const f = FIELDS.find((x) => x.sel === sel);
+  const chars = Array.from(f.text);
+  return chars.slice(0, Math.floor(clamp((t - f.start) * f.cps, 0, chars.length))).join("");
+}
+
+function collapse(el, p, margin = 0) {
+  el.style.overflow = "hidden";
+  el.style.height = p <= 0 ? "" : `${el.scrollHeight * (1 - p)}px`;
+  el.style.opacity = 1 - p;
+  if (margin) el.style.marginTop = `${margin * (1 - p)}px`;
+}
+function popIn(el, t, at) {
+  const p = prog(t, at, 0.5);
+  el.style.opacity = E.out(p);
+  el.style.transform = `scale(${lerp(0.85, 1, E.back(p))})`;
+}
+
+function renderApp(t) {
+  const app = $("#app");
+  const o = Math.max(...SCENES.app.map(([a, b]) => windowOpacity(t, a, b, 0.7, 0.6)));
+  app.style.opacity = o;
+  app.style.visibility = o <= 0.001 ? "hidden" : "visible";
+  const seg = SCENES.app.find(([a, b]) => t >= a - 0.01 && t <= b + 0.01) ?? SCENES.app[0];
+  const slide = 1 - E.out(prog(t, seg[0], 0.9));
+  $("#browser").style.transform = `translateX(${slide * 120}px) scale(${1 - slide * 0.04})`;
+  if (o <= 0.001) return;
+
+  renderPages(t);
+
+  // Sign-up submit
+  $("#btn-signup").textContent = t >= K.signupSubmit ? "Diving in…" : "Dive in 🦐";
+  $("#btn-signup").style.opacity = t >= K.signupSubmit ? 0.6 : 1;
+
+  // Join request
+  const requested = t >= K.requested;
+  show($("#btn-request"), !requested);
+  show($("#req-state"), requested);
+  if (requested) popIn($("#req-state"), t, K.requested);
+  const approved = t >= K.approved;
+  show($("#your-empty"), !approved);
+  show($("#your-evo"), approved);
+  if (approved) popIn($("#your-evo"), t, K.approved + 0.05);
+  collapse($("#wrap-other"), E.inOut(prog(t, K.approved, 0.5)), 24);
+  const skip = $("#skip");
+  const so = windowOpacity(t, K.skip[0], K.skip[1], 0.35, 0.45);
+  skip.style.opacity = so;
+  skip.style.visibility = so <= 0.001 ? "hidden" : "visible";
+  const done = t >= K.approved - 0.1;
+  $("#skip-emoji").textContent = done ? "✅" : "⏳";
+  $("#skip-title").textContent = done ? "Request approved!" : "A little later…";
+  $("#skip-sub").textContent = done ? `Welcome to ${CONFIG.board}` : "An admin looks at your request";
+  skip.firstElementChild.style.transform = `scale(${done ? lerp(0.9, 1, E.back(prog(t, K.approved - 0.1, 0.4))) : lerp(0.9, 1, E.back(prog(t, K.skip[0], 0.4)))})`;
+
+  // Hover on the board card
+  const evo = $("#your-evo");
+  const hovering = (t >= 35.4 && t < 37.6) || (t >= 78.2 && t < 78.85);
+  evo.style.borderColor = hovering ? "rgb(62 230 199 / 0.5)" : "";
+  // Presses (the board card pops in first; popIn owns its transform until then)
+  CLICKS.filter((c) => c.press).forEach((c) => {
+    if (c.press === "#your-evo" && t < K.approved + 0.6) return;
+    const lift = c.press === "#your-evo" && hovering ? -2 : 0;
+    $(c.press).style.transform = `translateY(${lift}px) scale(${pressScale(t, c.t)})`;
+  });
+
+  // Logging the dive
+  const scoreVal = typedValue("#f-score", t);
+  const saved = t >= K.logSaved;
+  const preview = $("#log-preview");
+  if (scoreVal === "") preview.textContent = "Type your score to see how deep you went.";
+  else {
+    const n = Number(scoreVal);
+    preview.innerHTML = `<span class="font-display font-bold text-aqua">${verdict(n)}</span> · ${metres(n)} deep`;
+  }
+  const btn = $("#btn-log");
+  btn.textContent = saved ? "Update dive" : t >= K.logSubmit ? "Splashing…" : "Log dive 🌊";
+  btn.style.opacity = !saved && t >= K.logSubmit ? 0.6 : 1;
+  const flash = $("#log-flash");
+  show(flash, saved);
+  if (saved) {
+    flash.textContent = `${verdict(CONFIG.score)} ${CONFIG.score} points logged for ${CONFIG.today}.`;
+    popIn(flash, t, K.logSaved);
+  }
+  collapse($("#reminder"), E.inOut(prog(t, K.logSaved + 0.2, 0.5)));
+  $("#d-wave").textContent = saved ? "🌊" : "👋";
+  show($("#d-sub-before"), !saved);
+  show($("#d-sub-after"), saved);
+  show($("#recent-empty"), !saved);
+  show($("#recent-list"), saved);
+  if (saved) popIn($("#recent-list"), t, K.logSaved);
+  // The tiles count up once the camera has pulled back to show them.
+  const counting = saved && t >= K.countUp;
+  const c = counting ? E.out(prog(t, K.countUp, 1.2)) : 0;
+  const v = Math.round(CONFIG.score * c);
+  $("#st-streak").textContent = counting ? 1 : 0;
+  $("#st-streak-hint").textContent = counting ? "Dipped a toe · best ever 1" : "Dry land · best ever 0";
+  $("#st-week").textContent = v;
+  $("#st-week-hint").textContent = counting ? `1 dive · ${metres(v)}` : "0 dives · 0 m";
+  $("#st-best").textContent = v;
+  $("#st-best-hint").textContent = counting ? metres(v) : "No dives yet";
+  $("#st-all").textContent = v;
+  $("#st-all-hint").textContent = counting ? "1 dive logged" : "0 dives logged";
+
+  renderCamera(t);
+}
+
+function renderPlay(t) {
+  const el = $("#play");
+  const o = windowOpacity(t, SCENES.play[0], SCENES.play[1], 0.7, 0.7);
+  el.style.opacity = o;
+  el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+  if (o <= 0.001) return;
+  const P = K.play;
+  appear($("#p-eyebrow"), t, P.title - 0.2);
+  appear($("#p-title"), t, P.title, Infinity, { dy: 40, d: 0.7 });
+  appear($("#p-sub"), t, P.title + 0.4);
+  $$(".p-rule").forEach((r, i) => {
+    appear(r, t, P.rules[i], Infinity, { dx: -40, dy: 0 });
+    const active = t >= P.rules[i] && (i === P.rules.length - 1 || t < P.rules[i + 1]);
+    if (t >= P.rules[i]) r.style.opacity = active ? 1 : 0.62;
+    r.style.borderColor = active ? "rgb(62 230 199 / 0.55)" : "";
+  });
+  appear($("#p-card"), t, P.card, Infinity, { dy: 40, d: 0.7 });
+  appear($("#p-row-a"), t, P.rowA);
+  appear($("#p-row-b"), t, P.rowB);
+  appear($("#p-pts-a"), t, P.ptsA, Infinity, { pop: 0.4, dy: 0 });
+  appear($("#p-pts-b"), t, P.ptsB, Infinity, { pop: 0.4, dy: 0 });
+  appear($("#p-cap-a"), t, P.ptsA + 0.15, Infinity, { dy: 10 });
+  appear($("#p-cap-b"), t, P.ptsB + 0.15, Infinity, { dy: 10 });
+  appear($("#p-depth"), t, P.depth, Infinity, { dy: 40, d: 0.7 });
+  const c = E.out(prog(t, P.count[0], P.count[1]));
+  const score = Math.round(CONFIG.score * c);
+  $("#p-score").textContent = score;
+  $("#p-metres").textContent = metres(score);
+  const depthP = (CONFIG.score / 700) * c;
+  $("#p-fill").style.height = `${depthP * 250}px`;
+  $("#p-diver").style.top = `${depthP * 250 - 20}px`;
+  $("#p-diver").style.transform = `rotate(${Math.sin(t * 3) * 6}deg)`;
+  appear($("#p-remember"), t, P.remember, Infinity, { dy: 12 });
+}
+
+function renderOutro(t) {
+  const el = $("#outro");
+  const o = E.inOut(prog(t, SCENES.outro[0], 0.7));
+  el.style.opacity = o;
+  el.style.visibility = o <= 0.001 ? "hidden" : "visible";
+  if (o <= 0.001) return;
+  const sh = $("#o-shrimp");
+  const p = prog(t, 92.0, 0.8);
+  sh.style.opacity = E.out(p);
+  sh.style.transform = `translateY(${floatY(t)}px) rotate(${floatRot(t)}deg) scale(${lerp(0.3, 1, E.back(p))})`;
+  appear($("#o-title"), t, 92.4, Infinity, { dy: 50, d: 0.8 });
+  $$(".o-card").forEach((c, i) => appear(c, t, 93.2 + i * 0.4, Infinity, { dy: 50, d: 0.7 }));
+  appear($("#o-foot"), t, 94.8);
+}
+
+const cursorCache = new Map();
+function resolvePoint(k, i) {
+  if (Array.isArray(k.at)) return k.at;
+  const el = $(k.at);
+  const r = el.getBoundingClientRect();
+  if (r.width > 0 && el.offsetParent !== null) {
+    const pt = [r.left + r.width * (k.fx ?? 0.5) + (k.dx ?? 0), r.top + r.height * (k.fy ?? 0.5) + (k.dy ?? 0)];
+    cursorCache.set(i, pt);
+    return pt;
+  }
+  return cursorCache.get(i) ?? [960, 540];
+}
+function renderCursor(t) {
+  const cur = $("#cursor");
+  const o = Math.max(...CURSOR_VIS.map(([a, b]) => windowOpacity(t, a, b, 0.3, 0.4)));
+  cur.style.opacity = o;
+  let i = 0;
+  CURSOR.forEach((k, j) => { if (t >= k.t - (k.dur ?? 0)) i = j; });
+  const k = CURSOR[i];
+  let pt = resolvePoint(k, i);
+  if (i > 0 && t < k.t) {
+    const from = resolvePoint(CURSOR[i - 1], i - 1);
+    const p = E.inOut(prog(t, k.t - k.dur, k.dur));
+    // a gentle arc rather than a dead-straight line
+    const arc = Math.sin(Math.PI * p) * Math.min(60, Math.hypot(pt[0] - from[0], pt[1] - from[1]) * 0.12);
+    pt = [lerp(from[0], pt[0], p), lerp(from[1], pt[1], p) - arc];
+  }
+  const click = CLICKS.find((c) => t >= c.t && t < c.t + 0.45);
+  const press = click ? 1 - 0.15 * Math.sin(Math.PI * prog(t, click.t, 0.2)) : 1;
+  cur.style.transform = `translate(${pt[0] - 4}px, ${pt[1] - 3}px) scale(${press})`;
+  const rip = $("#ripple");
+  if (click && o > 0) {
+    const p = prog(t, click.t, 0.45);
+    const r = 6 + 26 * E.out(p);
+    rip.style.opacity = 0.9 * (1 - p);
+    rip.style.width = rip.style.height = `${r * 2}px`;
+    rip.style.transform = `translate(${pt[0] - r}px, ${pt[1] - r}px)`;
+  } else rip.style.opacity = 0;
+}
+
+function render(t) {
+  renderBubbles(t);
+  renderDecor(t);
+  renderIntro(t);
+  renderSteps(t);
+  renderFields(t);
+  renderApp(t);
+  renderCaps(t);
+  renderPlay(t);
+  renderOutro(t);
+  renderCursor(t);
+  const fade = Math.max(1 - prog(t, 0, 0.6), prog(t, DURATION - 1.0, 1.0));
+  $("#fade").style.opacity = fade;
+}
+
+// Warm the pointer cache so any single frame renders correctly on its own.
+function prewarm() {
+  CURSOR.forEach((k, i) => { if (!Array.isArray(k.at)) { render(k.t); resolvePoint(k, i); } });
+}
+
+window.FPS = FPS;
+window.DURATION = DURATION;
+window.render = render;
+window.READY = (async () => {
+  await document.fonts.ready;
+  await Promise.all(["400 1em Fredoka", "600 1em Fredoka", "700 1em Fredoka", "400 1em Nunito", "600 1em Nunito", "700 1em Nunito", "800 1em Nunito"].map((f) => document.fonts.load(f)));
+  prewarm();
+  render(Number(new URLSearchParams(location.search).get("t") ?? 0));
+  return true;
+})();
+</script>
+</body>
+</html>
