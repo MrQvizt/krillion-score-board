@@ -16,7 +16,7 @@ export function AuthShell({
       </div>
       <div className="card animate-pop p-6 sm:p-8">
         <h1 className="heading text-3xl">{title}</h1>
-        <p className="mt-1 mb-6 text-sm text-mist">{subtitle}</p>
+        <p className="mt-1 mb-6 text-sm break-words text-mist">{subtitle}</p>
         {children}
       </div>
     </main>

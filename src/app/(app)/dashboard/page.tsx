@@ -92,7 +92,7 @@ export default async function DashboardPage() {
         <StatTile label="All-time best" value={allTimeBest} hint={isFullDepth(allTimeBest) ? "One in a Krillion!" : `${all.length} dives logged`} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-6">
           <Section title="Log a dive" emoji="📝" subtitle="One score per day. Logging the same day again overwrites it.">
             <ScoreForm today={today} existing={existing} />
@@ -105,10 +105,10 @@ export default async function DashboardPage() {
               <ul className="space-y-3">
                 {recent.map((s) => (
                   <li key={s.id} className="flex items-center gap-3">
-                    <div className="w-24 shrink-0 text-sm text-mist">{formatDayMonth(s.played_on)}</div>
-                    <div className="flex-1">
+                    <div className="w-20 shrink-0 text-sm text-mist sm:w-24">{formatDayMonth(s.played_on)}</div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-display text-lg font-bold">
+                        <span className="shrink-0 font-display text-lg font-bold">
                           {s.score}
                           {isFullDepth(s.score) ? " 💎" : ""}
                         </span>
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
                 You&apos;re not on a board yet.{joinable.length ? " Pick one below and ask to join." : " Ask the admin to create one."}
               </EmptyState>
             ) : (
-              <ul className="grid gap-3">
+              <ul className="grid grid-cols-1 gap-3">
                 {boards.map((b) => (
                   <li key={b.id}>
                     <Link
@@ -147,8 +147,8 @@ export default async function DashboardPage() {
                         {b.emoji}
                       </span>
                       <span className="min-w-0">
-                        <span className="heading block truncate text-lg">{b.name}</span>
-                        {b.description ? <span className="block truncate text-sm text-mist">{b.description}</span> : null}
+                        <span className="heading block text-lg leading-snug break-words">{b.name}</span>
+                        {b.description ? <span className="line-clamp-2 text-sm text-mist">{b.description}</span> : null}
                       </span>
                       <span className="ml-auto text-mist">→</span>
                     </Link>
@@ -160,21 +160,22 @@ export default async function DashboardPage() {
 
           {joinable.length > 0 ? (
             <Section title="Other boards" emoji="🙋" subtitle="Ask to join. An admin approves, then the board shows up above.">
-              <ul className="grid gap-3">
+              <ul className="grid grid-cols-1 gap-3">
                 {joinable.map((b) => (
-                  <li key={b.id} className="card-solid flex items-center gap-4 p-4">
+                  <li key={b.id} className="card-solid flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
                     <span className="text-4xl" aria-hidden>
                       {b.emoji}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="heading block truncate text-lg">{b.name}</span>
-                      <span className="block truncate text-sm text-mist">
+                    {/* Wide enough for the name; the buttons drop to their own line on narrow screens. */}
+                    <span className="min-w-0 flex-1 basis-40">
+                      <span className="heading block text-lg leading-snug break-words">{b.name}</span>
+                      <span className="line-clamp-2 text-sm text-mist">
                         {b.description ? `${b.description} · ` : ""}
                         {b.member_count} diver{b.member_count === 1 ? "" : "s"}
                       </span>
                     </span>
                     {b.requested ? (
-                      <form action={cancelJoinRequest} className="flex items-center gap-2">
+                      <form action={cancelJoinRequest} className="ml-auto flex items-center gap-2">
                         <input type="hidden" name="board_id" value={b.id} />
                         <span className="chip border-sun/40 text-sun">⏳ requested</span>
                         <button type="submit" className="btn-ghost btn-sm" title="Withdraw the request">
@@ -182,7 +183,7 @@ export default async function DashboardPage() {
                         </button>
                       </form>
                     ) : (
-                      <form action={requestToJoin}>
+                      <form action={requestToJoin} className="ml-auto">
                         <input type="hidden" name="board_id" value={b.id} />
                         <button type="submit" className="btn-aqua btn-sm">
                           Request to join

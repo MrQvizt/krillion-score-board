@@ -72,7 +72,7 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row">
         <div className="flex items-center gap-4">
           <span className="animate-float text-6xl motion-reduce:animate-none" aria-hidden>
             {board.emoji}
@@ -83,7 +83,7 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
             {board.description ? <p className="mt-1 text-mist">{board.description}</p> : null}
           </div>
         </div>
-        <div className="flex flex-col items-start gap-2 sm:items-end">
+        <div className="flex flex-col items-start gap-2 lg:items-end">
           <WeekNav boardId={board.id} start={start} thisWeek={thisWeek} />
           {profile.is_admin ? (
             <Link href={`/admin/boards/${board.id}`} className="text-xs text-mist hover:text-aqua">
@@ -129,7 +129,7 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
         ) : null}
       </Section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Section title="Deepest single dive" emoji="🤿" subtitle="Best one-day score this week.">
           <BestDiveList entries={best} />
         </Section>

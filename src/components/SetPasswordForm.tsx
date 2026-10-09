@@ -6,7 +6,15 @@ import { idle } from "@/app/actions/types";
 import { SubmitButton } from "./SubmitButton";
 
 /** Inline "give this diver a new password" control for the admin's divers table. */
-export function SetPasswordForm({ userId, nick }: { userId: string; nick: string }) {
+export function SetPasswordForm({
+  userId,
+  nick,
+  inputClassName = "w-40",
+}: {
+  userId: string;
+  nick: string;
+  inputClassName?: string;
+}) {
   const [state, action] = useActionState(setUserPassword, idle);
   return (
     <form action={action} className="flex flex-col gap-1">
@@ -15,7 +23,7 @@ export function SetPasswordForm({ userId, nick }: { userId: string; nick: string
         <input
           name="password"
           type="password"
-          className="input w-40"
+          className={`input ${inputClassName}`}
           placeholder="New password"
           minLength={8}
           required

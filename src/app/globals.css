@@ -53,6 +53,7 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--color-foam);
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgb(62 230 199 / 0.18), transparent 60%),
@@ -69,7 +70,7 @@ body {
   @apply rounded-3xl border border-white/10 bg-ocean/80 shadow-xl shadow-black/30;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-display text-base font-semibold transition
+  @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 font-display text-base font-semibold transition
     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua/70 disabled:cursor-not-allowed disabled:opacity-60;
 }
 @utility btn-primary {
@@ -95,7 +96,7 @@ body {
   @apply mb-1.5 block font-display text-sm font-semibold tracking-wide text-mist;
 }
 @utility chip {
-  @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-mist;
+  @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-mist;
 }
 @utility heading {
   @apply font-display font-bold tracking-tight text-foam;
@@ -108,4 +109,8 @@ body {
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.85);
   cursor: pointer;
+}
+/* iOS Safari centres the date and ignores text-align on the input itself. */
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
 }

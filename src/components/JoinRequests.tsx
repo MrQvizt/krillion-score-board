@@ -28,11 +28,11 @@ export function JoinRequestList({ items, showBoard = true }: { items: PendingReq
       {items.map(({ request, user, board }) => (
         <li
           key={`${request.board_id}:${request.user_id}`}
-          className="flex flex-wrap items-center gap-3 rounded-2xl border border-sun/30 bg-sun/10 px-3 py-2"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-sun/30 bg-sun/10 px-3 py-2"
         >
           <Avatar name={user.display_name} size="sm" />
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-display font-semibold">
+          <div className="min-w-0 flex-1 basis-48">
+            <div className="font-display font-semibold break-words">
               <Nick nick={user.display_name} name={user.full_name} />
               {showBoard ? (
                 <>
@@ -48,7 +48,7 @@ export function JoinRequestList({ items, showBoard = true }: { items: PendingReq
               {user.email} · asked {request.created_at.slice(0, 10)}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="ml-auto flex gap-1">
             <form action={approveJoinRequest}>
               <input type="hidden" name="board_id" value={request.board_id} />
               <input type="hidden" name="user_id" value={request.user_id} />
