@@ -5,6 +5,7 @@ import { createBoard, updateBoard } from "@/app/actions/admin";
 import { idle } from "@/app/actions/types";
 import { BOARD_EMOJIS } from "@/lib/constants";
 import type { Board } from "@/lib/types";
+import { BoardMascot } from "./BoardMascot";
 import { Flash } from "./ui";
 import { SubmitButton } from "./SubmitButton";
 
@@ -31,7 +32,7 @@ export function BoardForm({ board }: { board?: Board }) {
                 emoji === e ? "bg-aqua/30 ring-2 ring-aqua" : "bg-white/5 hover:bg-white/10"
               }`}
             >
-              {e}
+              <BoardMascot mascot={e} />
             </button>
           ))}
         </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addMember, deleteBoard, removeMember } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
+import { BoardMascot } from "@/components/BoardMascot";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { JoinRequestList, pairRequests } from "@/components/JoinRequests";
 import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
@@ -34,7 +35,7 @@ export default async function ManageBoardPage(props: PageProps<"/admin/boards/[i
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <span className="text-6xl" aria-hidden>
-            {board.emoji}
+            <BoardMascot mascot={board.emoji} />
           </span>
           <div>
             <p className="eyebrow">

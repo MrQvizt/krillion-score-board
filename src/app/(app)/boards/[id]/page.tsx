@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { BoardMascot } from "@/components/BoardMascot";
 import { BestDiveList, DailyPodium, Podium, StreakList, TotalsList, WeekGridTable } from "@/components/Leaderboards";
 import { Section, StatTile } from "@/components/ui";
 import { WeekNav } from "@/components/WeekNav";
@@ -75,7 +76,7 @@ export default async function BoardPage(props: PageProps<"/boards/[id]">) {
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div className="flex items-center gap-4">
           <span className="animate-float text-6xl motion-reduce:animate-none" aria-hidden>
-            {board.emoji}
+            <BoardMascot mascot={board.emoji} />
           </span>
           <div>
             <p className="eyebrow">Score board · {members.length} diver{members.length === 1 ? "" : "s"}</p>

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { BOARD_EMOJIS } from "@/lib/constants";
+import { BOARD_EMOJIS, SNORKEL_DUCK } from "@/lib/constants";
 import type { FormState } from "./types";
 
 function text(formData: FormData, key: string, max: number): string {
@@ -15,6 +15,7 @@ function text(formData: FormData, key: string, max: number): string {
 function pickEmoji(raw: string): string {
   const e = raw.trim();
   if (!e) return BOARD_EMOJIS[0];
+  if (e === SNORKEL_DUCK) return e; // a picture mascot, kept whole
   return [...e].slice(0, 2).join("") || BOARD_EMOJIS[0];
 }
 

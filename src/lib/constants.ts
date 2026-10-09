@@ -15,4 +15,12 @@ export const KRILLION_URL = "https://krillion.io/";
 export const SITE_NAME = "Krillion Score Board";
 export const SITE_TAGLINE = "Log your daily dive. Out-krill your friends.";
 
-export const BOARD_EMOJIS = ["🦐", "🐙", "🐡", "🦑", "🐠", "🐳", "🦀", "🐚", "🌊", "⚓", "🏆", "🔥"];
+/**
+ * A picture mascot with no emoji of its own, drawn by BoardMascot. It is saved
+ * in the board's emoji column under this key, so it must stay within the
+ * column's 8 characters.
+ */
+export const SNORKEL_DUCK = ":duck:";
+
+/** The mascots an admin can pick for a board. */
+export const BOARD_EMOJIS = ["🦐", "🐙", "🐡", "🦑", "🐠", "🐳", "🦀", "🐚", "🌊", "⚓", "🏆", "🔥", SNORKEL_DUCK];

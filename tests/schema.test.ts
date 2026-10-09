@@ -6,6 +6,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, afterAll, describe, expect, it } from "vitest";
+import { SNORKEL_DUCK } from "@/lib/constants";
 
 import { readdirSync } from "node:fs";
 
@@ -164,6 +165,12 @@ describe("boards and membership", () => {
     );
     const members = await as(ADMIN, "select count(*)::int as n from krillion_board_members");
     expect((members.rows[0] as { n: number }).n).toBe(2);
+  });
+
+  it("stores a picture mascot key as the board emoji", async () => {
+    await as(ADMIN, "update krillion_boards set emoji = $1 where id = $2", [SNORKEL_DUCK, boardId]);
+    const row = await as(ADMIN, "select emoji from krillion_boards where id = $1", [boardId]);
+    expect((row.rows[0] as { emoji: string }).emoji).toBe(SNORKEL_DUCK);
   });
 
   it("refuses board creation by a non-admin", async () => {
