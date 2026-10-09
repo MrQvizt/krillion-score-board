@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { approveJoinRequest, declineJoinRequest } from "@/app/actions/admin";
 import type { AdminUser, Board, JoinRequest } from "@/lib/types";
+import { BoardMascot } from "./BoardMascot";
 import { Avatar, EmptyState, Nick } from "./ui";
 
 export type PendingRequest = { request: JoinRequest; user: AdminUser; board: Board };
@@ -38,7 +39,7 @@ export function JoinRequestList({ items, showBoard = true }: { items: PendingReq
                 <>
                   <span className="font-normal text-mist"> wants to join </span>
                   <Link href={`/admin/boards/${board.id}`} className="hover:underline">
-                    {board.emoji} {board.name}
+                    <BoardMascot mascot={board.emoji} /> {board.name}
                   </Link>
                 </>
               ) : null}

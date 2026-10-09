@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cancelJoinRequest, requestToJoin } from "@/app/actions/boards";
 import { deleteScore } from "@/app/actions/scores";
+import { BoardMascot } from "@/components/BoardMascot";
 import { ScoreForm } from "@/components/ScoreForm";
 import { DepthBar, EmptyState, Nick, Section, StatTile } from "@/components/ui";
 import { requireSession } from "@/lib/auth";
@@ -144,7 +145,7 @@ export default async function DashboardPage() {
                       className="card-solid flex items-center gap-4 p-4 transition hover:-translate-y-0.5 hover:border-aqua/50"
                     >
                       <span className="text-4xl" aria-hidden>
-                        {b.emoji}
+                        <BoardMascot mascot={b.emoji} />
                       </span>
                       <span className="min-w-0">
                         <span className="heading block text-lg leading-snug break-words">{b.name}</span>
@@ -164,7 +165,7 @@ export default async function DashboardPage() {
                 {joinable.map((b) => (
                   <li key={b.id} className="card-solid flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
                     <span className="text-4xl" aria-hidden>
-                      {b.emoji}
+                      <BoardMascot mascot={b.emoji} />
                     </span>
                     {/* Wide enough for the name; the buttons drop to their own line on narrow screens. */}
                     <span className="min-w-0 flex-1 basis-40">

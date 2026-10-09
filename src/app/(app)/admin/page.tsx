@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { setAdmin, setFullName } from "@/app/actions/admin";
 import { BoardForm } from "@/components/BoardForm";
+import { BoardMascot } from "@/components/BoardMascot";
 import { JoinRequestList, pairRequests } from "@/components/JoinRequests";
 import { SetPasswordForm } from "@/components/SetPasswordForm";
 import { Avatar, EmptyState, Nick, Section } from "@/components/ui";
@@ -58,7 +59,7 @@ export default async function AdminPage() {
               {boards.map((b) => (
                 <li key={b.id} className="card-solid flex items-center gap-3 p-4">
                   <span className="text-3xl" aria-hidden>
-                    {b.emoji}
+                    <BoardMascot mascot={b.emoji} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="heading text-lg leading-snug break-words">{b.name}</div>
